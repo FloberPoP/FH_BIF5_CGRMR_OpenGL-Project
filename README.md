@@ -14,7 +14,7 @@ Follow these instructions to set up and configure the OpenGL project on your sys
 
 1. Open a **Command Prompt** and navigate to:
    ```
-   ...\FH_BIF5_CGRMR_OpenGL-Project\OpenGL-SnakeGame\include
+   ...\FH_BIF5_CGRMR_OpenGL-Project\OpenGL-SnakeGame\vcpkg
    ```
 2. Run the following commands:
    ```cmd
