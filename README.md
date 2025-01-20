@@ -8,7 +8,7 @@ Follow these instructions to set up and configure the OpenGL project on your sys
 2. Navigate to `Git` -> `Clone Repository...`.
 3. Use the following details to clone:
    - **URL:** `https://github.com/microsoft/vcpkg.git`
-   - **Path:** `...\FH_BIF5_CGRMR_OpenGL-Project\OpenGL-SnakeGame\include`
+   - **Path:** `...\FH_BIF5_CGRMR_OpenGL-Project\OpenGL-SnakeGame\vcpkg`
 
 ## Step 2: Install Dependencies with vcpkg
 
