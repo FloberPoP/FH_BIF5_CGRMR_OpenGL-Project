@@ -17,10 +17,10 @@ Follow these instructions to set up and configure the OpenGL project on your sys
    ...\FH_BIF5_CGRMR_OpenGL-Project\OpenGL-SnakeGame\vcpkg
    ```
 2. Run the following commands:
-   ```cmd
-   ./bootstrap-vcpkg.bat
-   .\vcpkg install glfw3 glad glm
-   .\vcpkg integrate install
+   ```in cmd:
+      bootstrap-vcpkg.bat
+      vcpkg install glfw3 glad glm
+      vcpkg integrate install
    ```
 
 ## Step 3: Configure Your Project in Visual Studio
