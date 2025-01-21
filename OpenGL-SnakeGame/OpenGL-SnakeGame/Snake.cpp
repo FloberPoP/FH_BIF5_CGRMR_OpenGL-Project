@@ -27,17 +27,12 @@ bool Snake::CollidesWithSelf()
 	return false;
 }
 
-bool Snake::CollidesWithFruit()
+bool Snake::CollidesWithFruit(Fruit fruit)
 {
 	// Check for collision with the fruit
-	if (abs(snake.posX - fruitX) < Grid::GRID_STEP / 2 && abs(snake.posY - fruitY) < Grid::GRID_STEP / 2)
+	if (abs(_pos.x - fruit.fruitPos.x) < Grid::GRID_STEP / 2 && abs(_pos.y - fruit.fruitPos.y) < Grid::GRID_STEP / 2)
 	{
-		score++;
-		// Move the fruit to a new random position within the grid
-		int gridX = rand() % Grid::GRID_SIZE;
-		int gridY = rand() % Grid::GRID_SIZE;
-		fruitX = -Grid::BORDER_OFFSET + (gridX + 0.5f) * Grid::GRID_STEP;
-		fruitY = -Grid::BORDER_OFFSET + (gridY + 0.5f) * Grid::GRID_STEP;
+		return true;
 	}
 	return false;
 }

@@ -1,6 +1,4 @@
 #include "Fruit.h"
-#include <cmath>
-#include "glm/glm.hpp"
 
 glm::vec2 fruitPos = glm::vec2(0.0f, 0.0f);
 

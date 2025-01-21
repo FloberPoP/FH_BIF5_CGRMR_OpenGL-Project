@@ -34,6 +34,7 @@ int score = 0;
 // Fruit position
 float fruitX = -0.85f;
 float fruitY = -0.85f;
+Fruit fruit;
 
 // Vertex Shader source code
 const char* vertexShaderSource = R"(
@@ -146,8 +147,28 @@ bool updateSnakePosition()
 {
     // Update position
     snake.ApplyMovement();
+    
+    if (snake.CollidesWithBorder())
+    {
+        return false;
+    }
 
-    return true; // Continue game
+    if (snake.CollidesWithSelf())
+    {
+        return false;
+    }
+
+    if (snake.CollidesWithFruit(fruit))
+    {
+        score++;
+        // Move the fruit to a new random position within the grid
+        int gridX = rand() % Grid::GRID_SIZE;
+        int gridY = rand() % Grid::GRID_SIZE;
+        fruitX = -Grid::BORDER_OFFSET + (gridX + 0.5f) * Grid::GRID_STEP;
+        fruitY = -Grid::BORDER_OFFSET + (gridY + 0.5f) * Grid::GRID_STEP;
+    }
+
+    return true;
 }
 
 int main()
@@ -226,7 +247,7 @@ int main()
 
         // Draw snake
         float snakeColor[] = { 0.0f, 0.5f, 1.0f };
-        drawCube(snake.posX, snake.posY, snakeColor);
+        drawCube(snake.GetPos().x, snake.GetPos().y, snakeColor);
 
         // Render text
         renderText(score);

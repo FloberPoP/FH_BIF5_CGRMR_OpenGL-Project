@@ -1,6 +1,7 @@
 #pragma once
 #include <glm/glm.hpp>
 #include "Grid.h"
+#include "Fruit.h"
 
 class Snake
 {
@@ -9,7 +10,7 @@ public:
 	void ApplyMovement();
 	bool CollidesWithBorder();
 	bool CollidesWithSelf();
-	bool CollidesWithFruit();
+	bool CollidesWithFruit(Fruit fruit);
 
 	glm::vec2 GetPos() { return _pos; }
 

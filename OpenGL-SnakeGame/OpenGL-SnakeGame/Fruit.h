@@ -1,5 +1,8 @@
 #pragma once
 #include "Grid.h"
+#include "glm/glm.hpp"
+#include <cmath>
+
 class Fruit
 {
 public: 
