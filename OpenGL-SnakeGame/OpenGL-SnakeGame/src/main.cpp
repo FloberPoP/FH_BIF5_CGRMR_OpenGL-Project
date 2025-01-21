@@ -7,20 +7,19 @@
 #include <cstdlib>
 #include <thread>
 #include <chrono>
-#include "../../vcpkg/packages/glm_x64-windows/include/glm/fwd.hpp"
+#include "glm/glm.hpp"
 #include "../Snake.h"
+#include "../Grid.h"
 
 // Window dimensions
 const unsigned int WIDTH = 800;
 const unsigned int HEIGHT = 800;
 
-// Grid properties
-const int GRID_SIZE = 30; // Number of fields along one axis
-const float GRID_STEP = 1.8f / GRID_SIZE; // Size of each field (normalized coordinates)
-const float BORDER_OFFSET = 0.9f; // Border boundary
-const float SNAKE_SIZE = GRID_STEP * 0.9f; // Snake size relative to grid field
+Grid GRID = Grid();
 
-Snake snake = Snake(GRID_STEP);
+const float SNAKE_SIZE = GRID.GRID_STEP * 0.9f; // Snake size relative to grid field
+
+Snake snake = Snake(GRID.GRID_STEP);
 
 int lastDirInput = 0;
 float movementCooldown = 0.2f; // in sec
@@ -75,15 +74,15 @@ void drawGrid()
 {
     glBegin(GL_LINES);
     glColor3f(0.8f, 0.8f, 0.8f); // Grid color
-    for (int i = 0; i <= GRID_SIZE; ++i)
+    for (int i = 0; i <= GRID.GRID_SIZE; ++i)
     {
-        float coord = -BORDER_OFFSET + i * GRID_STEP;
+        float coord = -GRID.BORDER_OFFSET + i * GRID.GRID_STEP;
         // Vertical lines
-        glVertex2f(coord, -BORDER_OFFSET);
-        glVertex2f(coord, BORDER_OFFSET);
+        glVertex2f(coord, -GRID.BORDER_OFFSET);
+        glVertex2f(coord, GRID.BORDER_OFFSET);
         // Horizontal lines
-        glVertex2f(-BORDER_OFFSET, coord);
-        glVertex2f(BORDER_OFFSET, coord);
+        glVertex2f(-GRID.BORDER_OFFSET, coord);
+        glVertex2f(GRID.BORDER_OFFSET, coord);
     }
     glEnd();
 }
@@ -94,10 +93,10 @@ void drawBorder()
     glColor3f(1.0f, 0.0f, 0.0f); // Border color
     glLineWidth(2.0f);
     glBegin(GL_LINE_LOOP);
-    glVertex2f(-BORDER_OFFSET, -BORDER_OFFSET);
-    glVertex2f(BORDER_OFFSET, -BORDER_OFFSET);
-    glVertex2f(BORDER_OFFSET, BORDER_OFFSET);
-    glVertex2f(-BORDER_OFFSET, BORDER_OFFSET);
+    glVertex2f(-GRID.BORDER_OFFSET, -GRID.BORDER_OFFSET);
+    glVertex2f(GRID.BORDER_OFFSET, -GRID.BORDER_OFFSET);
+    glVertex2f(GRID.BORDER_OFFSET, GRID.BORDER_OFFSET);
+    glVertex2f(-GRID.BORDER_OFFSET, GRID.BORDER_OFFSET);
     glEnd();
 }
 
@@ -149,20 +148,20 @@ bool updateSnakePosition()
     snake.ApplyMovement();
 
     // Check for border collision
-    if (snake.posX < -BORDER_OFFSET || snake.posX > BORDER_OFFSET || snake.posY < -BORDER_OFFSET || snake.posY > BORDER_OFFSET)
+    if (snake.posX < -GRID.BORDER_OFFSET || snake.posX > GRID.BORDER_OFFSET || snake.posY < -GRID.BORDER_OFFSET || snake.posY > GRID.BORDER_OFFSET)
     {
         return false; // End game
     }
 
     // Check for collision with the fruit
-    if (abs(snake.posX - fruitX) < GRID_STEP / 2 && abs(snake.posY - fruitY) < GRID_STEP / 2)
+    if (abs(snake.posX - fruitX) < GRID.GRID_STEP / 2 && abs(snake.posY - fruitY) < GRID.GRID_STEP / 2)
     {
         score++;
         // Move the fruit to a new random position within the grid
-        int gridX = rand() % GRID_SIZE;
-        int gridY = rand() % GRID_SIZE;
-        fruitX = -BORDER_OFFSET + (gridX + 0.5f) * GRID_STEP;
-        fruitY = -BORDER_OFFSET + (gridY + 0.5f) * GRID_STEP;
+        int gridX = rand() % GRID.GRID_SIZE;
+        int gridY = rand() % GRID.GRID_SIZE;
+        fruitX = -GRID.BORDER_OFFSET + (gridX + 0.5f) * GRID.GRID_STEP;
+        fruitY = -GRID.BORDER_OFFSET + (gridY + 0.5f) * GRID.GRID_STEP;
     }
 
     return true; // Continue game
@@ -170,6 +169,7 @@ bool updateSnakePosition()
 
 int main()
 {
+    Grid GRID = Grid();
     // Initialize GLFW
     if (!glfwInit())
     {
@@ -197,10 +197,10 @@ int main()
     }
 
     // Initialize fruit position
-    int initialFruitX = rand() % GRID_SIZE;
-    int initialFruitY = rand() % GRID_SIZE;
-    fruitX = -BORDER_OFFSET + (initialFruitX + 0.5f) * GRID_STEP;
-    fruitY = -BORDER_OFFSET + (initialFruitY + 0.5f) * GRID_STEP;
+    int initialFruitX = rand() % GRID.GRID_SIZE;
+    int initialFruitY = rand() % GRID.GRID_SIZE;
+    fruitX = -GRID.BORDER_OFFSET + (initialFruitX + 0.5f) * GRID.GRID_STEP;
+    fruitY = -GRID.BORDER_OFFSET + (initialFruitY + 0.5f) * GRID.GRID_STEP;
 
     currentTime = static_cast<float>(glfwGetTime());
     // Render loop
