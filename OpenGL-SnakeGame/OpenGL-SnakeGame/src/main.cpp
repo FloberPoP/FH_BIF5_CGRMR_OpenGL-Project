@@ -8,6 +8,7 @@
 #include <thread>
 #include <chrono>
 #include "glm/glm.hpp"
+#include <GL/freeglut.h>
 #include "../Snake.h"
 #include "../Grid.h"
 
@@ -61,15 +62,19 @@ void main()
 }
 )";
 
-// Function to draw text (for the score)
-void renderText(int score)
+// Function to draw text at a specific position
+void renderTextOnScreen(const std::string& text, float x, float y, const float* color)
 {
-    std::stringstream ss;
-    ss << "Score: " << score;
-    std::string text = ss.str();
+    glColor3fv(color); // Set the text color
+    glRasterPos2f(x, y); // Set the position for text rendering
 
-    glfwSetWindowTitle(glfwGetCurrentContext(), text.c_str());
+    // Render each character
+    for (char c : text)
+    {
+        glutBitmapCharacter(GLUT_BITMAP_HELVETICA_18, c);
+    }
 }
+
 
 // Grid rendering
 void drawGrid()
@@ -179,9 +184,20 @@ void drawSnake()
     //drawCube(snake.GetHead().pos.x, snake.GetHead().pos.y, snakeColor);
 }
 
-int main()
+int main(int argc, char** argv)
 {
     Grid GRID = Grid();
+
+    // Initialize GLUT
+    glutInit(&argc, argv);
+
+    // Initialize GLFW
+    if (!glfwInit())
+    {
+        std::cerr << "Failed to initialize GLFW" << std::endl;
+        return -1;
+    }
+
     // Initialize GLFW
     if (!glfwInit())
     {
@@ -258,7 +274,8 @@ int main()
         drawSnake();
 
         // Render text
-        renderText(score);
+        float textColor[] = { 1.0f, 1.0f, 1.0f };
+        renderTextOnScreen("Score: " + std::to_string(score), -0.9f, -0.95f, textColor);
 
         // Swap buffers and poll IO events
         glfwSwapBuffers(window);

@@ -71,8 +71,8 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <IncludePath>D:\Studium\FH\Sem_5\FH_BIF5_CGRMR_OpenGL-Project\OpenGL-SnakeGame\vcpkg\packages\glm_x64-windows\include;$(IncludePath)</IncludePath>
-    <LibraryPath>D:\Studium\FH\Sem_5\FH_BIF5_CGRMR_OpenGL-Project\OpenGL-SnakeGame\vcpkg\packages\glm_x64-windows\lib;$(LibraryPath)</LibraryPath>
+    <IncludePath>D:\Studium\FH\Sem_5\FH_BIF5_CGRMR_OpenGL-Project\OpenGL-SnakeGame\vcpkg\packages\glm_x64-windows\include;D:\FH\GitRepo\FH_BIF5_CGRMR_OpenGL-Project\OpenGL-SnakeGame\vcpkg\packages\freeglut_x64-windows\include;$(IncludePath)</IncludePath>
+    <LibraryPath>D:\FH\GitRepo\FH_BIF5_CGRMR_OpenGL-Project\OpenGL-SnakeGame\vcpkg\packages\freeglut_x64-windows\lib;D:\Studium\FH\Sem_5\FH_BIF5_CGRMR_OpenGL-Project\OpenGL-SnakeGame\vcpkg\packages\glm_x64-windows\lib;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <IncludePath>D:\Studium\FH\Sem_5\FH_BIF5_CGRMR_OpenGL-Project\OpenGL-SnakeGame\vcpkg\packages\glm_x64-windows\include;$(IncludePath)</IncludePath>
