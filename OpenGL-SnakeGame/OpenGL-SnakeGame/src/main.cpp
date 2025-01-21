@@ -8,6 +8,7 @@
 #include <thread>
 #include <chrono>
 #include "glm/glm.hpp"
+#include <GL/freeglut.h>
 #include "../Snake.h"
 #include "../Grid.h"
 # define M_PI           3.14159265358979323846
@@ -23,6 +24,7 @@ const float SNAKE_SIZE = GRID.GRID_STEP * 0.9f; // Snake size relative to grid f
 Snake snake = Snake();
 
 int lastDirInput = 0;
+int currentDirInput = 0;
 float movementCooldown = 0.2f; // in sec
 float movementTimer = 0.0f;
 float prevTime;
@@ -61,15 +63,19 @@ void main()
 }
 )";
 
-// Function to draw text (for the score)
-void renderText(int score)
+// Function to draw text at a specific position
+void renderTextOnScreen(const std::string& text, float x, float y, const float* color)
 {
-    std::stringstream ss;
-    ss << "Score: " << score;
-    std::string text = ss.str();
+    glColor3fv(color); // Set the text color
+    glRasterPos2f(x, y); // Set the position for text rendering
 
-    glfwSetWindowTitle(glfwGetCurrentContext(), text.c_str());
+    // Render each character
+    for (char c : text)
+    {
+        glutBitmapCharacter(GLUT_BITMAP_HELVETICA_18, c);
+    }
 }
+
 
 // Grid rendering
 void drawGrid()
@@ -121,25 +127,25 @@ void processInput(GLFWwindow* window)
     {
         snake.dir.x = 0.0f;
         snake.dir.y = 1.0f;
-        lastDirInput = GLFW_KEY_W;
+        currentDirInput = GLFW_KEY_W;
     }
     else if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS && lastDirInput != GLFW_KEY_W)
     {
         snake.dir.x = 0.0f;
         snake.dir.y = -1.0f;
-        lastDirInput = GLFW_KEY_S;
+        currentDirInput = GLFW_KEY_S;
     }
     else if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS && lastDirInput != GLFW_KEY_D)
     {
         snake.dir.x = -1.0f;
         snake.dir.y = 0.0f;
-        lastDirInput = GLFW_KEY_A;
+        currentDirInput = GLFW_KEY_A;
     }
     else if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS && lastDirInput != GLFW_KEY_A)
     {
         snake.dir.x = 1.0f;
         snake.dir.y = 0.0f;
-        lastDirInput = GLFW_KEY_D;
+        currentDirInput = GLFW_KEY_D;
     }
 }
 
@@ -224,9 +230,20 @@ void drawSnake()
     //drawCube(snake.GetHead().pos.x, snake.GetHead().pos.y, snakeColor);
 }
 
-int main()
+int main(int argc, char** argv)
 {
     Grid GRID = Grid();
+
+    // Initialize GLUT
+    glutInit(&argc, argv);
+
+    // Initialize GLFW
+    if (!glfwInit())
+    {
+        std::cerr << "Failed to initialize GLFW" << std::endl;
+        return -1;
+    }
+
     // Initialize GLFW
     if (!glfwInit())
     {
@@ -282,6 +299,7 @@ int main()
                 std::cout << "Game Over! Final Score: " << score << std::endl;
                 break;
             }
+            lastDirInput = currentDirInput;
         }
 
         // Render
@@ -304,7 +322,8 @@ int main()
         drawSnake();
 
         // Render text
-        renderText(score);
+        float textColor[] = { 1.0f, 1.0f, 1.0f };
+        renderTextOnScreen("Score: " + std::to_string(score), -0.9f, -0.95f, textColor);
 
         // Swap buffers and poll IO events
         glfwSwapBuffers(window);
