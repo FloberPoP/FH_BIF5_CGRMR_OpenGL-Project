@@ -30,7 +30,7 @@ bool Snake::CollidesWithSelf()
 bool Snake::CollidesWithFruit(Fruit fruit)
 {
 	// Check for collision with the fruit
-	if (abs(_pos.x - fruit.fruitPos.x) < Grid::GRID_STEP / 2 && abs(_pos.y - fruit.fruitPos.y) < Grid::GRID_STEP / 2)
+	if (abs(_pos.x - fruit.GetPos().x) < Grid::GRID_STEP / 2 && abs(_pos.y - fruit.GetPos().y) < Grid::GRID_STEP / 2)
 	{
 		return true;
 	}

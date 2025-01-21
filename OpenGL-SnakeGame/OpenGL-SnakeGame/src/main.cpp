@@ -32,9 +32,9 @@ float deltaTime;
 int score = 0;
 
 // Fruit position
-float fruitX = -0.85f;
-float fruitY = -0.85f;
-Fruit fruit;
+// float fruitX = -0.85f;
+// float fruitY = -0.85f;
+Fruit fruit = Fruit();
 
 // Vertex Shader source code
 const char* vertexShaderSource = R"(
@@ -161,11 +161,7 @@ bool updateSnakePosition()
     if (snake.CollidesWithFruit(fruit))
     {
         score++;
-        // Move the fruit to a new random position within the grid
-        int gridX = rand() % Grid::GRID_SIZE;
-        int gridY = rand() % Grid::GRID_SIZE;
-        fruitX = -Grid::BORDER_OFFSET + (gridX + 0.5f) * Grid::GRID_STEP;
-        fruitY = -Grid::BORDER_OFFSET + (gridY + 0.5f) * Grid::GRID_STEP;
+        fruit = Fruit();
     }
 
     return true;
@@ -201,10 +197,10 @@ int main()
     }
 
     // Initialize fruit position
-    int initialFruitX = rand() % GRID.GRID_SIZE;
+    /*int initialFruitX = rand() % GRID.GRID_SIZE;
     int initialFruitY = rand() % GRID.GRID_SIZE;
     fruitX = -GRID.BORDER_OFFSET + (initialFruitX + 0.5f) * GRID.GRID_STEP;
-    fruitY = -GRID.BORDER_OFFSET + (initialFruitY + 0.5f) * GRID.GRID_STEP;
+    fruitY = -GRID.BORDER_OFFSET + (initialFruitY + 0.5f) * GRID.GRID_STEP;*/
 
     currentTime = static_cast<float>(glfwGetTime());
     // Render loop
@@ -243,7 +239,7 @@ int main()
 
         // Draw fruit
         float fruitColor[] = { 1.0f, 0.0f, 0.0f };
-        drawCube(fruitX, fruitY, fruitColor);
+        drawCube(fruit.GetPos().x, fruit.GetPos().y, fruitColor);
 
         // Draw snake
         float snakeColor[] = { 0.0f, 0.5f, 1.0f };
