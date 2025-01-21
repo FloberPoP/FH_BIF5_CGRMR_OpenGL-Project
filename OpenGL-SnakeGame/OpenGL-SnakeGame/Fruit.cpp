@@ -7,17 +7,6 @@ Fruit::Fruit()
     SetRandomPos();
 }
 
-// ?
-void Fruit::spawnNewFruit(Grid g)
-{
-    int gridX = rand() % g.GRID_SIZE;
-    int gridY = rand() % g.GRID_SIZE;
-    _pos = glm::vec2(
-        -g.BORDER_OFFSET + (gridX + 0.5f) * g.GRID_STEP,
-        -g.BORDER_OFFSET + (gridY + 0.5f) * g.GRID_STEP
-    );
-}
-
 void Fruit::SetRandomPos()
 {
     int gridX = rand() % Grid::GRID_SIZE;
@@ -27,3 +16,9 @@ void Fruit::SetRandomPos()
         -Grid::BORDER_OFFSET + (gridY + 0.5f) * Grid::GRID_STEP
     );
 }
+
+void Fruit::RandomFruit() 
+{
+
+}
+

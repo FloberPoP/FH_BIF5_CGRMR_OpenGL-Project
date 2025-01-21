@@ -19,7 +19,7 @@ Follow these instructions to set up and configure the OpenGL project on your sys
 2. Run the following commands:
    ```in cmd:
       bootstrap-vcpkg.bat
-      vcpkg install glfw3 glad glm
+      vcpkg install glfw3 glad glm freeglut
       vcpkg integrate install
    ```
 
