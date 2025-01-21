@@ -19,7 +19,7 @@ Grid GRID = Grid();
 
 const float SNAKE_SIZE = GRID.GRID_STEP * 0.9f; // Snake size relative to grid field
 
-Snake snake = Snake(GRID.GRID_STEP);
+Snake snake = Snake();
 
 int lastDirInput = 0;
 float movementCooldown = 0.2f; // in sec
@@ -161,10 +161,21 @@ bool updateSnakePosition()
     if (snake.CollidesWithFruit(fruit))
     {
         score++;
+        snake.Grow();
         fruit = Fruit();
     }
 
     return true;
+}
+
+void drawSnake()
+{
+    float snakeColor[] = { 0.0f, 0.5f, 1.0f };
+    for (SnakePart* sp = snake.GetTail(); sp != nullptr; sp = sp->prev)
+    {
+        drawCube(sp->pos.x, sp->pos.y, snakeColor);
+    }
+    //drawCube(snake.GetHead().pos.x, snake.GetHead().pos.y, snakeColor);
 }
 
 int main()
@@ -242,8 +253,7 @@ int main()
         drawCube(fruit.GetPos().x, fruit.GetPos().y, fruitColor);
 
         // Draw snake
-        float snakeColor[] = { 0.0f, 0.5f, 1.0f };
-        drawCube(snake.GetPos().x, snake.GetPos().y, snakeColor);
+        drawSnake();
 
         // Render text
         renderText(score);

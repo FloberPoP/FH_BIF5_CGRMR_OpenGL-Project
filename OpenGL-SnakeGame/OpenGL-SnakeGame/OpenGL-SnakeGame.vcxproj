@@ -138,6 +138,7 @@
     <ClCompile Include="Fruit.cpp" />
     <ClCompile Include="Grid.cpp" />
     <ClCompile Include="Snake.cpp" />
+    <ClCompile Include="SnakePart.cpp" />
     <ClCompile Include="src\main.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -148,6 +149,7 @@
     <ClInclude Include="Fruit.h" />
     <ClInclude Include="Grid.h" />
     <ClInclude Include="Snake.h" />
+    <ClInclude Include="SnakePart.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

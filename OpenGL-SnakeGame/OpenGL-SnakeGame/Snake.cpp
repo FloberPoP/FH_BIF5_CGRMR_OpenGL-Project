@@ -1,21 +1,30 @@
 #include "Snake.h"
 
-Snake::Snake(float gridFieldSize)
+Snake::Snake()
 {
-	_gridFieldSize = gridFieldSize;
-	_pos = glm::vec2(gridFieldSize / 2, gridFieldSize / 2);
+	tail = new SnakePart(glm::vec2(Grid::GRID_STEP / 2, Grid::GRID_STEP / 2));
+	head = tail;
 }
 
 void Snake::ApplyMovement()
 {
-	_pos.x += dir.x * _gridFieldSize;
-	_pos.y += dir.y * _gridFieldSize;
+	if (tail->prev != nullptr && tail != head) // Snake length > 1
+	{
+		tail->pos = head->pos;
+		head->prev = tail;
+		tail = tail->prev;
+		head = head->prev;
+		head->prev = nullptr;
+	}
+
+	head->pos.x += dir.x * Grid::GRID_STEP;
+	head->pos.y += dir.y * Grid::GRID_STEP;
 }
 
 bool Snake::CollidesWithBorder()
 {
 	// Check for border collision
-	if (_pos.x < -Grid::BORDER_OFFSET || _pos.x > Grid::BORDER_OFFSET || _pos.y < -Grid::BORDER_OFFSET || _pos.y > Grid::BORDER_OFFSET)
+	if (GetPos().x < -Grid::BORDER_OFFSET || GetPos().x > Grid::BORDER_OFFSET || GetPos().y < -Grid::BORDER_OFFSET || GetPos().y > Grid::BORDER_OFFSET)
 	{
 		return true;
 	}
@@ -30,9 +39,14 @@ bool Snake::CollidesWithSelf()
 bool Snake::CollidesWithFruit(Fruit fruit)
 {
 	// Check for collision with the fruit
-	if (abs(_pos.x - fruit.GetPos().x) < Grid::GRID_STEP / 2 && abs(_pos.y - fruit.GetPos().y) < Grid::GRID_STEP / 2)
+	if (abs(GetPos().x - fruit.GetPos().x) < Grid::GRID_STEP / 2 && abs(GetPos().y - fruit.GetPos().y) < Grid::GRID_STEP / 2)
 	{
 		return true;
 	}
 	return false;
+}
+
+void Snake::Grow()
+{
+	tail = new SnakePart(tail->pos, tail);
 }
