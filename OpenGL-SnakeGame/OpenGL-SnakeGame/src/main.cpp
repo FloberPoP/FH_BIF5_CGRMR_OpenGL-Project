@@ -22,6 +22,7 @@ const float SNAKE_SIZE = GRID.GRID_STEP * 0.9f; // Snake size relative to grid f
 Snake snake = Snake();
 
 int lastDirInput = 0;
+int currentDirInput = 0;
 float movementCooldown = 0.2f; // in sec
 float movementTimer = 0.0f;
 float prevTime;
@@ -120,25 +121,25 @@ void processInput(GLFWwindow* window)
     {
         snake.dir.x = 0.0f;
         snake.dir.y = 1.0f;
-        lastDirInput = GLFW_KEY_W;
+        currentDirInput = GLFW_KEY_W;
     }
     else if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS && lastDirInput != GLFW_KEY_W)
     {
         snake.dir.x = 0.0f;
         snake.dir.y = -1.0f;
-        lastDirInput = GLFW_KEY_S;
+        currentDirInput = GLFW_KEY_S;
     }
     else if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS && lastDirInput != GLFW_KEY_D)
     {
         snake.dir.x = -1.0f;
         snake.dir.y = 0.0f;
-        lastDirInput = GLFW_KEY_A;
+        currentDirInput = GLFW_KEY_A;
     }
     else if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS && lastDirInput != GLFW_KEY_A)
     {
         snake.dir.x = 1.0f;
         snake.dir.y = 0.0f;
-        lastDirInput = GLFW_KEY_D;
+        currentDirInput = GLFW_KEY_D;
     }
 }
 
@@ -236,6 +237,7 @@ int main()
                 std::cout << "Game Over! Final Score: " << score << std::endl;
                 break;
             }
+            lastDirInput = currentDirInput;
         }
 
         // Render
