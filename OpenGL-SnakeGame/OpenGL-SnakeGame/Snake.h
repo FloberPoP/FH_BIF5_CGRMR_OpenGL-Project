@@ -1,4 +1,7 @@
 #pragma once
+#include <glm/glm.hpp>
+#include "Grid.h"
+
 class Snake
 {
 public:
@@ -6,13 +9,14 @@ public:
 	void ApplyMovement();
 	bool CollidesWithBorder();
 	bool CollidesWithSelf();
+	bool CollidesWithFruit();
 
-	float posX = 0.0f;
-	float posY = 0.0f;
-	float dirX = 0.0f;
-	float dirY = 0.0f;
+	glm::vec2 GetPos() { return _pos; }
+
+	glm::vec2 dir;
 
 private:
 	float _gridFieldSize;
+	glm::vec2 _pos;
 };
 

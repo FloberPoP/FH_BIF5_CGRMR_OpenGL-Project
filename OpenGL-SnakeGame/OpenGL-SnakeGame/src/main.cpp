@@ -117,26 +117,26 @@ void processInput(GLFWwindow* window)
 {
     if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS && lastDirInput != GLFW_KEY_S)
     {
-        snake.dirX = 0.0f;
-        snake.dirY = 1.0f;
+        snake.dir.x = 0.0f;
+        snake.dir.y = 1.0f;
         lastDirInput = GLFW_KEY_W;
     }
-    if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS && lastDirInput != GLFW_KEY_W)
+    else if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS && lastDirInput != GLFW_KEY_W)
     {
-        snake.dirX = 0.0f;
-        snake.dirY = -1.0f;
+        snake.dir.x = 0.0f;
+        snake.dir.y = -1.0f;
         lastDirInput = GLFW_KEY_S;
     }
-    if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS && lastDirInput != GLFW_KEY_D)
+    else if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS && lastDirInput != GLFW_KEY_D)
     {
-        snake.dirX = -1.0f;
-        snake.dirY = 0.0f;
+        snake.dir.x = -1.0f;
+        snake.dir.y = 0.0f;
         lastDirInput = GLFW_KEY_A;
     }
-    if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS && lastDirInput != GLFW_KEY_A)
+    else if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS && lastDirInput != GLFW_KEY_A)
     {
-        snake.dirX = 1.0f;
-        snake.dirY = 0.0f;
+        snake.dir.x = 1.0f;
+        snake.dir.y = 0.0f;
         lastDirInput = GLFW_KEY_D;
     }
 }
@@ -146,23 +146,6 @@ bool updateSnakePosition()
 {
     // Update position
     snake.ApplyMovement();
-
-    // Check for border collision
-    if (snake.posX < -GRID.BORDER_OFFSET || snake.posX > GRID.BORDER_OFFSET || snake.posY < -GRID.BORDER_OFFSET || snake.posY > GRID.BORDER_OFFSET)
-    {
-        return false; // End game
-    }
-
-    // Check for collision with the fruit
-    if (abs(snake.posX - fruitX) < GRID.GRID_STEP / 2 && abs(snake.posY - fruitY) < GRID.GRID_STEP / 2)
-    {
-        score++;
-        // Move the fruit to a new random position within the grid
-        int gridX = rand() % GRID.GRID_SIZE;
-        int gridY = rand() % GRID.GRID_SIZE;
-        fruitX = -GRID.BORDER_OFFSET + (gridX + 0.5f) * GRID.GRID_STEP;
-        fruitY = -GRID.BORDER_OFFSET + (gridY + 0.5f) * GRID.GRID_STEP;
-    }
 
     return true; // Continue game
 }
