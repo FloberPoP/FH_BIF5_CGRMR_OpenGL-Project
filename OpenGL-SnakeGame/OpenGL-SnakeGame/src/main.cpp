@@ -22,8 +22,11 @@ const float SNAKE_SIZE = GRID_STEP * 0.9f; // Snake size relative to grid field
 Snake snake = Snake(GRID_STEP);
 
 int lastDirInput = 0;
-int movementCooldown = 50;
-int movementTimer = 0;
+float movementCooldown = 0.2f; // in sec
+float movementTimer = 0.0f;
+float prevTime;
+float currentTime;
+float deltaTime;
 
 // Counter for collisions
 int score = 0;
@@ -198,25 +201,29 @@ int main()
     fruitX = -BORDER_OFFSET + (initialFruitX + 0.5f) * GRID_STEP;
     fruitY = -BORDER_OFFSET + (initialFruitY + 0.5f) * GRID_STEP;
 
+    currentTime = static_cast<float>(glfwGetTime());
     // Render loop
     while (!glfwWindowShouldClose(window))
     {
         // Input
         processInput(window);
 
+        // Delta Time
+        prevTime = currentTime;
+        currentTime = static_cast<float>(glfwGetTime());
+        deltaTime = currentTime - prevTime;
+
+        movementTimer += deltaTime;
+
         // Update snake position
         if (movementCooldown <= movementTimer)
         {
-            movementTimer = 0;
+            movementTimer -= movementCooldown;
             if (!updateSnakePosition())
             {
                 std::cout << "Game Over! Final Score: " << score << std::endl;
                 break;
             }
-        }
-        else
-        {
-            movementTimer += 1;
         }
 
         // Render
