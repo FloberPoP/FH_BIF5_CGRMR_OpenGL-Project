@@ -7,6 +7,7 @@
 #include <cstdlib>
 #include <thread>
 #include <chrono>
+#include "../../vcpkg/packages/glm_x64-windows/include/glm/fwd.hpp"
 #include "../Snake.h"
 
 // Window dimensions
