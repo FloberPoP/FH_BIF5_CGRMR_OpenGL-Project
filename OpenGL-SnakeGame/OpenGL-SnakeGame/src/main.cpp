@@ -25,7 +25,7 @@ Grid GRID = Grid();
 const float SNAKE_SIZE = GRID.GRID_STEP * 0.9f; // Snake size relative to grid field
 
 Snake* snake;
-vector<Fruit> fruits;
+std::vector<Fruit> fruits;
 
 int lastDirInput = 0;
 int currentDirInput = 0;
@@ -41,7 +41,6 @@ int score = 0;
 // Fruit position
 // float fruitX = -0.85f;
 // float fruitY = -0.85f;
-Fruit fruit = Fruit();
 
 // Vertex Shader source code
 const char* vertexShaderSource = R"(
@@ -82,7 +81,7 @@ void renderRestartPrompt() {
 void resetGame() {
     delete snake;
     snake = new Snake();            // Reset the snake
-    fruit = Fruit();            // Reset the fruit
+    fruits.push_back(Fruit());            // Reset the fruits
     score = 0;                  // Reset the score
     lastDirInput = 0;           // Reset direction input
     currentDirInput = 0;
@@ -164,17 +163,20 @@ bool updateSnakePosition()
     {
         return false;
     }
-
-    if (snake->CollidesWithFruit(fruit))
+    
+    for(Fruit fruit : fruits)
     {
-        score++;
-        snake->Grow();
-        fruit = Fruit();
-        for (int i = 0; i < 1 + score / 10; i++)
+        if (snake->CollidesWithFruit(fruit))
         {
-            SetRandomPos();
+            ++score;
+            snake->Grow();
+            fruit = Fruit();
+            
+            if (1 + score / 10) 
+            {
+                fruits.push_back(Fruit());
+            }
         }
-        fruit = Fruit();
     }
 
     return true;
@@ -311,7 +313,7 @@ int main(int argc, char** argv)
 {
     Grid GRID = Grid();
     snake = new Snake();
-
+    fruits.push_back(Fruit());
     // Initialize GLUT
     glutInit(&argc, argv);
 
@@ -415,11 +417,22 @@ int main(int argc, char** argv)
         // Draw border
         drawBorder();
 
-        // Draw fruit
-        float fruitColor[] = { 1.0f, 0.0f, 0.0f };
-        //drawCube(fruit.GetPos().x, fruit.GetPos().y, fruitColor);
-        //drawCherry(fruit.GetPos().x, fruit.GetPos().y);
-        drawBanana(fruit.GetPos().x, fruit.GetPos().y);
+        // Draw fruits
+        for (Fruit fruit : fruits) 
+        {
+            switch (fruit.fruitType)
+            {
+            case 0: // Cherry
+                drawCherry(fruit.GetPos().x, fruit.GetPos().y);
+                break;
+            case 1: // Banana
+                drawBanana(fruit.GetPos().x, fruit.GetPos().y);
+                break;
+            default:
+                drawBanana(fruit.GetPos().x, fruit.GetPos().y);
+                break;
+            }
+        }
 
         // Draw snake
         drawSnake();

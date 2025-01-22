@@ -2,21 +2,19 @@
 #include "Grid.h"
 #include "glm/glm.hpp"
 #include <cmath>
-
+enum FruitE {
+	Cherry = 0,
+	Banana = 1
+};
 class Fruit
 {
 public:
 	Fruit();
-	unsigned int fruitID = 0;
-	void SetRandomPos();
-
 	glm::vec2 GetPos() { return _pos; }
+	FruitE fruitType;
 
 private:
 	glm::vec2 _pos = glm::vec2(0.0f, 0.0f);
-	int fruitcount = 1;
-	Fruit(const int score);
 	void SetRandomPos();
-	void RandomFruit();
 };
 
