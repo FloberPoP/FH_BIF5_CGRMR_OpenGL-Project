@@ -14,6 +14,7 @@
 #include "../TextRenderer.h"
 #include <vector>
 #include "../DirectionalLight.h"
+#include "../Camera.h"
 # define M_PI           3.14159265358979323846
 
 // Window dimensions
@@ -40,6 +41,9 @@ float deltaTime;
 // Counter for collisions
 int score = 0;
 bool OnHit = false;
+
+Camera camera(static_cast<float>(WIDTH) / HEIGHT);
+bool ColorChange = true;
 
 // Shader program
 GLuint shaderProgram;
@@ -108,6 +112,7 @@ void processInput(GLFWwindow* window);
 
 bool updateSnakePosition();
 void resetGame();
+std::string switchConverter(bool b);
 
 int main(int argc, char** argv)
 {
@@ -250,6 +255,18 @@ void updateGame(GLFWwindow* window)
         }
     }
     lastDirInput = currentDirInput;
+
+    // Update the camera
+    camera.update(deltaTime);
+
+    // Apply the camera's projection
+    glMatrixMode(GL_PROJECTION);
+    glLoadIdentity();
+    glm::mat4 projection = camera.getProjectionMatrix();
+    glLoadMatrixf(&projection[0][0]);
+
+    glMatrixMode(GL_MODELVIEW);
+    glLoadIdentity();
 }
 
 // Render the game
@@ -288,6 +305,7 @@ void renderGame()
     // Render text
     float textColor[] = { 1.0f, 1.0f, 1.0f };
     TextRenderer::renderTextOnScreen("Score: " + std::to_string(score), -0.9f, -0.95f, textColor);
+    TextRenderer::renderTextOnScreen("LightSwitch(C): " + switchConverter(ColorChange) + " | ZoomSwitch(V) " + switchConverter(camera.zoomOffOn), 0.05f, -0.95f, textColor);
 }
 
 // Lost Game
@@ -332,11 +350,14 @@ void lostGame(GLFWwindow* window)
 }
 
 void updateLightColorOverTime(float elapsedTime) {
-    float red = (sin(elapsedTime) + 1.0f) / 2.0f;   // Oscillates between 0 and 1
-    float green = (sin(elapsedTime + 2.0f) + 1.0f) / 2.0f; // Phase shift for variety
-    float blue = (sin(elapsedTime + 4.0f) + 1.0f) / 2.0f;  // Another phase shift
+    if (ColorChange)
+    {
+        float red = (sin(elapsedTime) + 1.0f) / 2.0f;   // Oscillates between 0 and 1
+        float green = (sin(elapsedTime + 2.0f) + 1.0f) / 2.0f; // Phase shift for variety
+        float blue = (sin(elapsedTime + 4.0f) + 1.0f) / 2.0f;  // Another phase shift
 
-    LIGHT.setLightColor(red, green, blue);
+        LIGHT.setLightColor(red, green, blue);
+    }
 }
 
 // Render the restart button text
@@ -354,6 +375,8 @@ void resetGame() {
     lastDirInput = 0;           // Reset direction input
     currentDirInput = 0;
     movementTimer = 0.0f;       // Reset movement timer
+    ColorChange = true;
+    camera.zoomOffOn = true;
 }
 
 // Grid rendering
@@ -416,6 +439,19 @@ void processInput(GLFWwindow* window)
         snake->dir.y = 0.0f;
         currentDirInput = GLFW_KEY_D;
     }
+    else if (glfwGetKey(window, GLFW_KEY_C) == GLFW_PRESS)
+    {
+        ColorChange = !ColorChange;
+
+        if (!ColorChange)
+            LIGHT.setLightColor(1.0f, 1.0f, 1.0f);
+
+    }
+    else if (glfwGetKey(window, GLFW_KEY_V) == GLFW_PRESS)
+    {
+        camera.ToggleZoom();
+    }
+
 }
 
 // Update snake position and ensure it stays within bounds
@@ -441,6 +477,7 @@ bool updateSnakePosition()
             snake->Grow();
             *it = Fruit();
             OnHit = true;
+            camera.zoomIn(0.9f, 8.0f, deltaTime);
         }
     }
     if (OnHit && score % 10 == 0)
@@ -586,3 +623,10 @@ void drawSnake()
     drawSnakeHead(snakeHeadColor);
 }
 
+std::string switchConverter(bool b)
+{
+    if (b)
+        return "ON";
+    else
+        return "OFF";
+}
