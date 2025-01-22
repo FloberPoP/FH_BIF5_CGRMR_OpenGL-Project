@@ -6,6 +6,16 @@ Snake::Snake()
 	head = tail;
 }
 
+Snake::~Snake()
+{
+	while (tail != nullptr)
+	{
+		head = tail; // use head as temp variable
+		tail = tail->prev;
+		delete head;
+	}
+}
+
 void Snake::ApplyMovement()
 {
 	if (tail->prev != nullptr && tail != head) // Snake length > 1
@@ -33,6 +43,13 @@ bool Snake::CollidesWithBorder()
 
 bool Snake::CollidesWithSelf()
 {
+	for (SnakePart* sp = tail; sp->prev != nullptr; sp = sp->prev)
+	{
+		if (head->pos.x == sp->pos.x && head->pos.y == sp->pos.y)
+		{
+			return true;
+		}
+	}
 	return false;
 }
 

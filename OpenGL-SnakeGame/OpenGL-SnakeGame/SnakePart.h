@@ -1,5 +1,6 @@
 #pragma once
 #include <glm/glm.hpp>
+#include <iostream>
 
 class SnakePart
 {
@@ -11,10 +12,5 @@ public:
 	{
 		this->pos = pos;
 		this->prev = prev;
-	}
-
-	~SnakePart()
-	{
-		delete prev;
 	}
 };
