@@ -396,3 +396,4 @@ FodyWeavers.xsd
 
 # JetBrains Rider
 *.sln.iml
+OpenGL-SnakeGame/OpenGL-SnakeGame/scores.txt
