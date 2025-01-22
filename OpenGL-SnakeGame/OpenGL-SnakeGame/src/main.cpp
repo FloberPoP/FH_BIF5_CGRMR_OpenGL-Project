@@ -108,18 +108,6 @@ void drawBorder()
     glEnd();
 }
 
-// Draw a cube at a specified position
-void drawCube(float x, float y, const float* color)
-{
-    glColor3fv(color);
-    glBegin(GL_QUADS);
-    glVertex2f(x - SNAKE_SIZE / 2, y - SNAKE_SIZE / 2);
-    glVertex2f(x + SNAKE_SIZE / 2, y - SNAKE_SIZE / 2);
-    glVertex2f(x + SNAKE_SIZE / 2, y + SNAKE_SIZE / 2);
-    glVertex2f(x - SNAKE_SIZE / 2, y + SNAKE_SIZE / 2);
-    glEnd();
-}
-
 // Process input to change direction
 void processInput(GLFWwindow* window)
 {
@@ -175,8 +163,46 @@ bool updateSnakePosition()
     return true;
 }
 
-void drawCircle(float x, float y, float radius, float r, float g, float b) {
-    glColor3f(r, g, b);
+void drawQuad(float x, float y, float w, float h, const float* color)
+{
+    glColor3fv(color);
+    glBegin(GL_QUADS);
+    glVertex2f(x - w / 2, y - h / 2);
+    glVertex2f(x + w / 2, y - h / 2);
+    glVertex2f(x + w / 2, y + h / 2);
+    glVertex2f(x - w / 2, y + h / 2);
+    glEnd();
+}
+
+void drawTrinagle(float x, float y, float w, float h, float dirX, float dirY, const float* color)
+{
+    glColor3fv(color);
+
+    float halfWidth = w / 2.0f;
+    float halfHeight = h / 2.0f;
+
+    glBegin(GL_TRIANGLES);
+
+    // Top vertex
+    glVertex2f(x + halfWidth * dirX * -1, y + halfHeight * dirY * -1);
+
+    // Bottom-left vertex
+    glVertex2f(
+        (dirX != 0) ? x + halfWidth * dirX : x - halfWidth,
+        (dirY != 0) ? y + halfHeight * dirY : y - halfHeight
+    );
+
+    // Bottom-right vertex
+    glVertex2f(
+        (dirX != 0) ? x + halfWidth * dirX : x + halfWidth,
+        (dirY != 0) ? y + halfHeight * dirY : y + halfHeight
+    );
+
+    glEnd();
+}
+
+void drawCircle(float x, float y, float radius, const float* color) {
+    glColor3fv(color);
     glBegin(GL_TRIANGLE_FAN);
     glVertex2f(x, y);
     for (int i = 0; i <= 100; ++i) {
@@ -187,8 +213,8 @@ void drawCircle(float x, float y, float radius, float r, float g, float b) {
 }
 
 // Function to draw a line (for the stem)
-void drawLine(float x1, float y1, float x2, float y2, float r, float g, float b) {
-    glColor3f(r, g, b);
+void drawLine(float x1, float y1, float x2, float y2, const float* color) {
+    glColor3fv(color);
     glBegin(GL_LINES);
     glVertex2f(x1, y1);
     glVertex2f(x2, y2);
@@ -198,36 +224,69 @@ void drawLine(float x1, float y1, float x2, float y2, float r, float g, float b)
 void drawCherry(float spawnX, float spawnY) 
 {
     // Draw the cherries
-    drawCircle(spawnX - 0.01f, spawnY - 0.01f, 0.01f, 1.0f, 0.0f, 0.0f); // Left cherry (red)
-    drawCircle(spawnX + 0.01f, spawnY - 0.01f, 0.01f, 1.0f, 0.0f, 0.0f);  // Right cherry (red)
+    float cherryColor[] = { 1.0f, 0.0f, 0.0f };
+    drawCircle(spawnX - 0.01f, spawnY - 0.01f, 0.01f, cherryColor); // Left cherry (red)
+    drawCircle(spawnX + 0.01f, spawnY - 0.01f, 0.01f, cherryColor);  // Right cherry (red)
 
     // Draw the stems
-    drawLine(spawnX - 0.01f, spawnY - 0.015f, spawnX + 0.0f, spawnY + 0.02f, 0.0f, 0.5f, 0.0f); // Left stem (green)
-    drawLine(spawnX + 0.01f, spawnY - 0.015f, spawnX + 0.0f, spawnY + 0.02f, 0.0f, 0.5f, 0.0f);  // Right stem (green)
+    float stemColor[] = { 0.0f, 0.5f, 0.0f };
+    drawLine(spawnX - 0.01f, spawnY - 0.015f, spawnX + 0.0f, spawnY + 0.02f, stemColor); // Left stem (green)
+    drawLine(spawnX + 0.01f, spawnY - 0.015f, spawnX + 0.0f, spawnY + 0.02f, stemColor);  // Right stem (green)
 
     // Draw the connecting part of the stems
-    drawLine(spawnX + 0.005f, spawnY + 0.02f, spawnX - 0.005f, spawnY + 0.02f, 0.0f, 0.5f, 0.0f); // Connection (green)
+    drawLine(spawnX + 0.005f, spawnY + 0.02f, spawnX - 0.005f, spawnY + 0.02f, stemColor); // Connection (green)
 }
 void drawBanana(float spawnX, float spawnY)
 {
     // Draw the banana
-    drawCircle(spawnX - 0.00f, spawnY - 0.00f, 0.02f, 1.0f , 0.984f, 0.0f); 
-    drawCircle(spawnX + 0.005f, spawnY + 0.005f, 0.015f, 0.769f, 0.741f, 0.027f);
-    drawCircle(spawnX + 0.01f, spawnY + 0.01f, 0.015f, 0.2f, 0.302f, 0.302f);
+    float bananaColor1[] = { 1.0f , 0.984f, 0.0f };
+    float bananaColor2[] = { 0.769f, 0.741f, 0.027f };
+    float bananaColor3[] = { 0.2f, 0.302f, 0.302f };
+
+    drawCircle(spawnX - 0.00f, spawnY - 0.00f, 0.02f, bananaColor1);
+    drawCircle(spawnX + 0.005f, spawnY + 0.005f, 0.015f, bananaColor2);
+    drawCircle(spawnX + 0.01f, spawnY + 0.01f, 0.015f, bananaColor3);
 
     // Draw the end
-    drawLine(spawnX - 0.01f, spawnY + 0.02f, spawnX + 0.001f, spawnY + 0.02f, 0.2f, 0.11f, 0.067f); // Left stem (green)
-    drawLine(spawnX + 0.02f, spawnY - 0.00f, spawnX + 0.02f, spawnY - 0.01f, 0.2f, 0.11f, 0.067f);  // Right stem (green)
+    float endColor[] = { 0.2f, 0.11f, 0.067f };
+    drawLine(spawnX - 0.01f, spawnY + 0.02f, spawnX + 0.001f, spawnY + 0.02f, endColor); // Left stem (green)
+    drawLine(spawnX + 0.02f, spawnY - 0.00f, spawnX + 0.02f, spawnY - 0.01f, endColor);  // Right stem (green)
+}
+
+void drawSnakeHead(const float* color)
+{
+    drawCircle(snake.GetHead().pos.x, snake.GetHead().pos.y, SNAKE_SIZE / 2, color);
+
+    float quadWidth = (snake.dir.x != 0) ? SNAKE_SIZE / 2 : SNAKE_SIZE;
+    float quadHeight = (snake.dir.y != 0) ? SNAKE_SIZE / 2 : SNAKE_SIZE;
+    float quadPosX = snake.GetHead().pos.x - (snake.dir.x * SNAKE_SIZE / 4);
+    float quadPosY = snake.GetHead().pos.y - (snake.dir.y * SNAKE_SIZE / 4);
+
+    drawQuad(
+        quadPosX,
+        quadPosY,
+        quadWidth, quadHeight, color);
+}
+
+void drawSnakeTail(const float* color)
+{
+    drawTrinagle(snake.GetTail()->pos.x, snake.GetTail()->pos.y, SNAKE_SIZE, SNAKE_SIZE, snake.dir.x, snake.dir.y, color);
 }
 
 void drawSnake()
 {
-    float snakeColor[] = { 0.0f, 0.5f, 1.0f };
-    for (SnakePart* sp = snake.GetTail(); sp != nullptr; sp = sp->prev)
+    float snakeBodyColor[] = { 0.0f, 1.0f, 0.5f };
+    float snakeHeadColor[] = { 0.0f, 1.0f, 0.2f };
+
+    if (score > 0)
     {
-        drawCube(sp->pos.x, sp->pos.y, snakeColor);
+        drawSnakeTail(snakeBodyColor);
+        for (SnakePart* sp = snake.GetTail()->prev; sp->prev != nullptr; sp = sp->prev)
+        {
+            drawQuad(sp->pos.x, sp->pos.y, SNAKE_SIZE, SNAKE_SIZE, snakeBodyColor);
+        }
     }
-    //drawCube(snake.GetHead().pos.x, snake.GetHead().pos.y, snakeColor);
+    drawSnakeHead(snakeHeadColor);
 }
 
 int main(int argc, char** argv)
