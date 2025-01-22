@@ -20,7 +20,6 @@
 const unsigned int WIDTH = 800;
 const unsigned int HEIGHT = 800;
 
-
 Grid GRID = Grid();
 
 DirectionalLight LIGHT = DirectionalLight();
@@ -41,33 +40,296 @@ float deltaTime;
 // Counter for collisions
 int score = 0;
 bool OnHit = false;
-// Fruit position
-// float fruitX = -0.85f;
-// float fruitY = -0.85f;
 
-// Vertex Shader source code
+// Shader program
+GLuint shaderProgram;
+
+// Vertex Array Object (VAO) and Vertex Buffer Object (VBO)
+GLuint VAO, VBO, EBO;
+
+// Shader source code
 const char* vertexShaderSource = R"(
 #version 330 core
 layout (location = 0) in vec3 aPos;
+layout (location = 1) in vec2 aTexCoord;
+
+out vec2 TexCoord;
 
 uniform vec2 offset;
 
 void main()
 {
     gl_Position = vec4(aPos.x + offset.x, aPos.y + offset.y, aPos.z, 1.0);
+    TexCoord = aTexCoord;
 }
 )";
 
-// Fragment Shader source code
 const char* fragmentShaderSource = R"(
 #version 330 core
 out vec4 FragColor;
 
+in vec2 TexCoord;
+
+uniform sampler2D ourTexture;
+
 void main()
 {
-    FragColor = vec4(0.0, 0.5, 1.0, 1.0); // Snake color
+    FragColor = texture(ourTexture, TexCoord);
 }
 )";
+
+void initShaders();
+void initGL();
+void processInput(GLFWwindow* window);
+void resetGame();
+void renderRestartPrompt();
+void updateGame(GLFWwindow* window);
+void renderGame();
+void lostGame(GLFWwindow* window);
+
+void updateLightColorOverTime(float elapsedTime);
+void renderRestartPrompt();
+
+void drawGrid();
+void drawBorder();
+void drawQuad(float x, float y, float w, float h, const float* color);
+void drawTrinagle(float x, float y, float w, float h, float dirX, float dirY, const float* color);
+void drawCircle(float x, float y, float radius, const float* color);
+void drawLine(float x1, float y1, float x2, float y2, const float* color);
+
+void drawCherry(float spawnX, float spawnY);
+void drawBanana(float spawnX, float spawnY);
+
+void drawSnake();
+void drawSnakeHead(const float* color);
+void drawSnakeTail(const float* color);
+
+void processInput(GLFWwindow* window);
+
+bool updateSnakePosition();
+void resetGame();
+
+int main(int argc, char** argv)
+{
+    Grid GRID = Grid();
+    snake = new Snake();
+    fruits.push_back(Fruit());
+    // Initialize GLUT
+    glutInit(&argc, argv);
+
+    // Initialize GLFW
+    if (!glfwInit())
+    {
+        std::cerr << "Failed to initialize GLFW" << std::endl;
+        return -1;
+    }
+
+    // Initialize GLFW
+    if (!glfwInit())
+    {
+        std::cerr << "Failed to initialize GLFW" << std::endl;
+        return -1;
+    }
+
+    // Create a windowed mode window and its OpenGL context
+    GLFWwindow* window = glfwCreateWindow(WIDTH, HEIGHT, "Snake Game", NULL, NULL);
+    if (!window)
+    {
+        std::cerr << "Failed to create GLFW window" << std::endl;
+        glfwTerminate();
+        return -1;
+    }
+
+    // Make the window's context current
+    glfwMakeContextCurrent(window);
+
+    // Load OpenGL function pointers using GLAD
+    if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
+    {
+        std::cerr << "Failed to initialize GLAD" << std::endl;
+        return -1;
+    }
+
+    currentTime = static_cast<float>(glfwGetTime());
+
+    // Setup the directional light
+    LIGHT.setupDirectionalLight();
+    glEnable(GL_LIGHTING);   // Enable lighting
+    glEnable(GL_COLOR_MATERIAL); // Allows glColor to interact with light
+    glEnable(GL_FRAMEBUFFER_SRGB);
+
+    //initGL();
+
+    // Render loop
+    while (!glfwWindowShouldClose(window))
+    {
+        updateGame(window);
+
+        renderGame();
+
+        // Swap buffers and poll IO events
+        glfwSwapBuffers(window);
+        glfwPollEvents();
+    }
+
+    // Clean up
+    delete snake;
+    glfwTerminate();
+    return 0;
+}
+
+// Initialize shaders and OpenGL objects
+void initShaders()
+{
+    // Compile vertex shader
+    GLuint vertexShader = glCreateShader(GL_VERTEX_SHADER);
+    glShaderSource(vertexShader, 1, &vertexShaderSource, nullptr);
+    glCompileShader(vertexShader);
+
+    // Compile fragment shader
+    GLuint fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
+    glShaderSource(fragmentShader, 1, &fragmentShaderSource, nullptr);
+    glCompileShader(fragmentShader);
+
+    // Link shaders into a program
+    shaderProgram = glCreateProgram();
+    glAttachShader(shaderProgram, vertexShader);
+    glAttachShader(shaderProgram, fragmentShader);
+    glLinkProgram(shaderProgram);
+
+    // Clean up shaders
+    glDeleteShader(vertexShader);
+    glDeleteShader(fragmentShader);
+}
+
+// Initialize OpenGL settings
+void initGL()
+{
+    // Enable depth testing
+    glEnable(GL_DEPTH_TEST);
+
+    // Initialize shaders
+    initShaders();
+
+    // Setup VAO, VBO, and EBO
+    glGenVertexArrays(1, &VAO);
+    glGenBuffers(1, &VBO);
+    glGenBuffers(1, &EBO);
+
+    glBindVertexArray(VAO);
+
+    // Bind and set up VBO and EBO here...
+    // TODO
+
+    glBindVertexArray(0);
+}
+
+// Update game state
+void updateGame(GLFWwindow* window)
+{
+    float elapsedTime = static_cast<float>(glfwGetTime());
+
+    // Update light color
+    updateLightColorOverTime(elapsedTime);
+
+    // Input
+    processInput(window);
+
+    // Delta Time
+    prevTime = currentTime;
+    currentTime = static_cast<float>(glfwGetTime());
+    deltaTime = currentTime - prevTime;
+
+    movementTimer += deltaTime;
+
+    // Update snake position
+    if (movementCooldown <= movementTimer) {
+        movementTimer -= movementCooldown;
+        if (!updateSnakePosition()) {
+            lostGame(window);
+        }
+    }
+    lastDirInput = currentDirInput;
+}
+
+// Render the game
+void renderGame()
+{
+    // Render
+    glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+    // Draw grid
+    drawGrid();
+
+    // Draw border
+    drawBorder();
+
+    // Draw fruits
+    for (Fruit fruit : fruits)
+    {
+        switch (fruit.fruitType)
+        {
+        case 0: // Cherry
+            drawCherry(fruit.GetPos().x, fruit.GetPos().y);
+            break;
+        case 1: // Banana
+            drawBanana(fruit.GetPos().x, fruit.GetPos().y);
+            break;
+        default:
+            drawBanana(fruit.GetPos().x, fruit.GetPos().y);
+            break;
+        }
+    }
+
+    // Draw snake
+    drawSnake();
+
+    // Render text
+    float textColor[] = { 1.0f, 1.0f, 1.0f };
+    TextRenderer::renderTextOnScreen("Score: " + std::to_string(score), -0.9f, -0.95f, textColor);
+}
+
+// Lost Game
+void lostGame(GLFWwindow* window)
+{
+    std::cout << "Game Over! Final Score: " << score << std::endl;
+
+    // Write score to file
+    TextRenderer::writeScoreToFile(score);
+
+    // Read and display the scoreboard
+    std::vector<int> scores = TextRenderer::readScoresFromFile();
+
+    // End-game rendering loop
+    bool restart = false;
+    while (!restart) {
+        if (!LIGHT.isActive()) {
+            LIGHT.toggle(); // Ensure the light is active
+        }
+
+        // Reset the light to a default state (perfect white light)
+        LIGHT.setLightColor(1.0f, 1.0f, 1.0f); // Reset to white light
+
+        // Render the scoreboard
+        glClearColor(0.2f, 0.3f, 0.3f, 1.0f); // Background color
+        glClear(GL_COLOR_BUFFER_BIT);
+        TextRenderer::renderScoreboard(scores, score);
+        renderRestartPrompt();
+        glfwSwapBuffers(window);
+        glfwPollEvents();
+
+        // Check for restart or exit input
+        if (glfwGetKey(window, GLFW_KEY_R) == GLFW_PRESS) {
+            resetGame();  // Reset game state
+            restart = true;
+        }
+        else if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS) {
+            glfwSetWindowShouldClose(window, true);  // Close the game
+            restart = true;
+        }
+    }
+}
 
 void updateLightColorOverTime(float elapsedTime) {
     float red = (sin(elapsedTime) + 1.0f) / 2.0f;   // Oscillates between 0 and 1
@@ -76,10 +338,6 @@ void updateLightColorOverTime(float elapsedTime) {
 
     LIGHT.setLightColor(red, green, blue);
 }
-
-#pragma region Score
-
-#pragma endregion
 
 // Render the restart button text
 void renderRestartPrompt() {
@@ -271,6 +529,7 @@ void drawCherry(float spawnX, float spawnY)
     // Draw the connecting part of the stems
     drawLine(spawnX + 0.005f, spawnY + 0.02f, spawnX - 0.005f, spawnY + 0.02f, stemColor); // Connection (green)
 }
+
 void drawBanana(float spawnX, float spawnY)
 {
     LIGHT.setupMaterial();
@@ -327,163 +586,3 @@ void drawSnake()
     drawSnakeHead(snakeHeadColor);
 }
 
-int main(int argc, char** argv)
-{
-    Grid GRID = Grid();
-    snake = new Snake();
-    fruits.push_back(Fruit());
-    // Initialize GLUT
-    glutInit(&argc, argv);
-
-    // Initialize GLFW
-    if (!glfwInit())
-    {
-        std::cerr << "Failed to initialize GLFW" << std::endl;
-        return -1;
-    }
-
-    // Initialize GLFW
-    if (!glfwInit())
-    {
-        std::cerr << "Failed to initialize GLFW" << std::endl;
-        return -1;
-    }
-
-    // Create a windowed mode window and its OpenGL context
-    GLFWwindow* window = glfwCreateWindow(WIDTH, HEIGHT, "Snake Game", NULL, NULL);
-    if (!window)
-    {
-        std::cerr << "Failed to create GLFW window" << std::endl;
-        glfwTerminate();
-        return -1;
-    }
-
-    // Make the window's context current
-    glfwMakeContextCurrent(window);
-
-    // Load OpenGL function pointers using GLAD
-    if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
-    {
-        std::cerr << "Failed to initialize GLAD" << std::endl;
-        return -1;
-    }
-
-    // Initialize fruit position
-    /*int initialFruitX = rand() % GRID.GRID_SIZE;
-    int initialFruitY = rand() % GRID.GRID_SIZE;
-    fruitX = -GRID.BORDER_OFFSET + (initialFruitX + 0.5f) * GRID.GRID_STEP;
-    fruitY = -GRID.BORDER_OFFSET + (initialFruitY + 0.5f) * GRID.GRID_STEP;*/
-
-    currentTime = static_cast<float>(glfwGetTime());
-
-    // Setup the directional light
-    LIGHT.setupDirectionalLight();
-
-    glEnable(GL_LIGHTING);   // Enable lighting
-    glEnable(GL_COLOR_MATERIAL); // Allows glColor to interact with light
-    glEnable(GL_FRAMEBUFFER_SRGB);
-
-    // Render loop
-    while (!glfwWindowShouldClose(window))
-    {
-        float elapsedTime = static_cast<float>(glfwGetTime());
-
-        // Update light color
-        updateLightColorOverTime(elapsedTime);
-
-        // Input
-        processInput(window);
-
-        // Delta Time
-        prevTime = currentTime;
-        currentTime = static_cast<float>(glfwGetTime());
-        deltaTime = currentTime - prevTime;
-
-        movementTimer += deltaTime;
-
-        // Update snake position
-        if (movementCooldown <= movementTimer) {
-            movementTimer -= movementCooldown;
-            if (!updateSnakePosition()) {
-                std::cout << "Game Over! Final Score: " << score << std::endl;
-
-                // Write score to file
-                TextRenderer::writeScoreToFile(score);
-
-                // Read and display the scoreboard
-                std::vector<int> scores = TextRenderer::readScoresFromFile();
-
-                // End-game rendering loop
-                bool restart = false;
-                while (!restart) {
-                    if (!LIGHT.isActive()) {
-                        LIGHT.toggle(); // Ensure the light is active
-                    }
-
-                    // Reset the light to a default state (perfect white light)
-                    LIGHT.setLightColor(1.0f, 1.0f, 1.0f); // Reset to white light
-
-                    // Render the scoreboard
-                    glClearColor(0.2f, 0.3f, 0.3f, 1.0f); // Background color
-                    glClear(GL_COLOR_BUFFER_BIT);
-                    TextRenderer::renderScoreboard(scores, score);
-                    renderRestartPrompt();
-                    glfwSwapBuffers(window);
-                    glfwPollEvents();
-
-                    // Check for restart or exit input
-                    if (glfwGetKey(window, GLFW_KEY_R) == GLFW_PRESS) {
-                        resetGame();  // Reset game state
-                        restart = true;
-                    }
-                    else if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS) {
-                        glfwSetWindowShouldClose(window, true);  // Close the game
-                        restart = true;
-                    }
-                }
-            }
-            lastDirInput = currentDirInput;
-        }
-
-        // Render
-        glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-        // Draw grid
-        drawGrid();
-
-        // Draw border
-        drawBorder();
-
-        // Draw fruits
-        for (Fruit fruit : fruits) 
-        {
-            switch (fruit.fruitType)
-            {
-            case 0: // Cherry
-                drawCherry(fruit.GetPos().x, fruit.GetPos().y);
-                break;
-            case 1: // Banana
-                drawBanana(fruit.GetPos().x, fruit.GetPos().y);
-                break;
-            default:
-                drawBanana(fruit.GetPos().x, fruit.GetPos().y);
-                break;
-            }
-        }
-
-        // Draw snake
-        drawSnake();
-
-        // Render text
-        float textColor[] = { 1.0f, 1.0f, 1.0f };
-        TextRenderer::renderTextOnScreen("Score: " + std::to_string(score), -0.9f, -0.95f, textColor);
-
-        // Swap buffers and poll IO events
-        glfwSwapBuffers(window);
-        glfwPollEvents();
-    }
-
-    glfwTerminate();
-    return 0;
-}
