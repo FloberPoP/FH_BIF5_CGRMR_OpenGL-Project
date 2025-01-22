@@ -13,6 +13,7 @@
 #include "../Grid.h"
 #include "../TextRenderer.h"
 #include <vector>
+#include "../DirectionalLight.h"
 # define M_PI           3.14159265358979323846
 
 // Window dimensions
@@ -21,6 +22,8 @@ const unsigned int HEIGHT = 800;
 
 
 Grid GRID = Grid();
+
+DirectionalLight LIGHT = DirectionalLight();
 
 const float SNAKE_SIZE = GRID.GRID_STEP * 0.9f; // Snake size relative to grid field
 
@@ -91,6 +94,7 @@ void resetGame() {
 // Grid rendering
 void drawGrid()
 {
+    LIGHT.setupMaterial();
     glBegin(GL_LINES);
     glColor3f(0.8f, 0.8f, 0.8f); // Grid color
     for (int i = 0; i <= GRID.GRID_SIZE; ++i)
@@ -109,6 +113,7 @@ void drawGrid()
 // Border rendering
 void drawBorder()
 {
+    LIGHT.setupMaterial();
     glColor3f(1.0f, 0.0f, 0.0f); // Border color
     glLineWidth(2.0f);
     glBegin(GL_LINE_LOOP);
@@ -166,6 +171,7 @@ bool updateSnakePosition()
     
     for(Fruit fruit : fruits)
     {
+<<<<<<< Updated upstream
         if (snake->CollidesWithFruit(fruit))
         {
             ++score;
@@ -176,6 +182,15 @@ bool updateSnakePosition()
             {
                 fruits.push_back(Fruit());
             }
+=======
+        LIGHT.toggle();
+        score++;
+        snake->Grow();
+        fruit = Fruit();
+        for (int i = 0; i < 1 + score / 10; i++)
+        {
+            //SetRandomPos();
+>>>>>>> Stashed changes
         }
     }
 
@@ -184,6 +199,7 @@ bool updateSnakePosition()
 
 void drawQuad(float x, float y, float w, float h, const float* color)
 {
+    LIGHT.setupMaterial();
     glColor3fv(color);
     glBegin(GL_QUADS);
     glVertex2f(x - w / 2, y - h / 2);
@@ -195,6 +211,7 @@ void drawQuad(float x, float y, float w, float h, const float* color)
 
 void drawTrinagle(float x, float y, float w, float h, float dirX, float dirY, const float* color)
 {
+    LIGHT.setupMaterial();
     glColor3fv(color);
 
     float halfWidth = w / 2.0f;
@@ -221,6 +238,7 @@ void drawTrinagle(float x, float y, float w, float h, float dirX, float dirY, co
 }
 
 void drawCircle(float x, float y, float radius, const float* color) {
+    LIGHT.setupMaterial();
     glColor3fv(color);
     glBegin(GL_TRIANGLE_FAN);
     glVertex2f(x, y);
@@ -233,6 +251,7 @@ void drawCircle(float x, float y, float radius, const float* color) {
 
 // Function to draw a line (for the stem)
 void drawLine(float x1, float y1, float x2, float y2, const float* color) {
+    LIGHT.setupMaterial();
     glColor3fv(color);
     glBegin(GL_LINES);
     glVertex2f(x1, y1);
@@ -242,6 +261,7 @@ void drawLine(float x1, float y1, float x2, float y2, const float* color) {
 
 void drawCherry(float spawnX, float spawnY) 
 {
+    LIGHT.setupMaterial();
     // Draw the cherries
     float cherryColor[] = { 1.0f, 0.0f, 0.0f };
     drawCircle(spawnX - 0.01f, spawnY - 0.01f, 0.01f, cherryColor); // Left cherry (red)
@@ -257,6 +277,7 @@ void drawCherry(float spawnX, float spawnY)
 }
 void drawBanana(float spawnX, float spawnY)
 {
+    LIGHT.setupMaterial();
     // Draw the banana
     float bananaColor1[] = { 1.0f , 0.984f, 0.0f };
     float bananaColor2[] = { 0.769f, 0.741f, 0.027f };
@@ -295,6 +316,7 @@ void drawSnakeTail(const float* color)
 
 void drawSnake()
 {
+    LIGHT.setupMaterial();
     float snakeBodyColor[] = { 0.0f, 1.0f, 0.5f };
     float snakeHeadColor[] = { 0.0f, 1.0f, 0.2f };
 
@@ -357,6 +379,13 @@ int main(int argc, char** argv)
     fruitY = -GRID.BORDER_OFFSET + (initialFruitY + 0.5f) * GRID.GRID_STEP;*/
 
     currentTime = static_cast<float>(glfwGetTime());
+
+    // Setup the directional light
+    LIGHT.setupDirectionalLight();
+
+    glEnable(GL_LIGHTING);   // Enable lighting
+    glEnable(GL_COLOR_MATERIAL); // Allows glColor to interact with light
+
     // Render loop
     while (!glfwWindowShouldClose(window))
     {
@@ -386,9 +415,11 @@ int main(int argc, char** argv)
                 bool restart = false;
                 while (!restart) {
                     // Render the scoreboard
+                    if (LIGHT.isActive() == false)
+                        LIGHT.toggle();
                     glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
                     glClear(GL_COLOR_BUFFER_BIT);
-                    TextRenderer::renderScoreboard(scores);
+                    TextRenderer::renderScoreboard(scores, score);
                     renderRestartPrompt();
                     glfwSwapBuffers(window);
                     glfwPollEvents();

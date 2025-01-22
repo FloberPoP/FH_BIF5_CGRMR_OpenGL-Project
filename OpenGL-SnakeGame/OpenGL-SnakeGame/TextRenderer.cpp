@@ -43,18 +43,40 @@ std::vector<int> TextRenderer::readScoresFromFile() {
 }
 
 // Render the scoreboard on the screen
-void TextRenderer::renderScoreboard(const std::vector<int>& scores) {
+void TextRenderer::renderScoreboard(const std::vector<int>& scores, int currentScore) {
     float y = 0.6f; // Starting Y position for displaying scores
-    float textColor[] = { 1.0f, 1.0f, 1.0f };
+    float defaultTextColor[] = { 1.0f, 1.0f, 1.0f }; // Color for top 5 scores
+    float highlightTextColor[] = { 0.0f, 1.0f, 0.0f }; // Color for the current score in top 5
+    float outsideTextColor[] = { 1.0f, 0.0f, 0.0f }; // Color for the current score outside top 5
 
-    renderTextOnScreen("=== Scoreboard ===", -0.3f, y, textColor);
+    renderTextOnScreen("=== Scoreboard ===", -0.3f, y, defaultTextColor);
     y -= 0.1f;
 
+    bool currentScoreDisplayed = false; // Track if the current score has been displayed
     int count = 0;
+
     for (int score : scores) {
         if (count >= 5) break; // Display only top 5 scores
+
+        // Determine the color for the current score
+        const float* textColor = (score == currentScore && !currentScoreDisplayed)
+            ? highlightTextColor
+            : defaultTextColor;
+
         renderTextOnScreen(std::to_string(count + 1) + ". " + std::to_string(score), -0.2f, y, textColor);
         y -= 0.1f;
         count++;
+
+        // Mark the current score as displayed if it matches
+        if (score == currentScore) {
+            currentScoreDisplayed = true;
+        }
+    }
+
+    // If the current score is not in the top 5, display it below
+    if (!currentScoreDisplayed) {
+        y -= 0.1f; // Add some space before displaying the current score
+        renderTextOnScreen("Your Score: " + std::to_string(currentScore), -0.2f, y, outsideTextColor);
     }
 }
+
