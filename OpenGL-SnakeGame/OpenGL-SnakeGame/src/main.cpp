@@ -14,6 +14,8 @@
 #include "../TextRenderer.h"
 #include <vector>
 #include "../DirectionalLight.h"
+#define STB_IMAGE_IMPLEMENTATION
+#include "stb_image.h"
 # define M_PI           3.14159265358979323846
 
 // Window dimensions
@@ -81,6 +83,7 @@ void main()
 void initShaders();
 void initGL();
 void processInput(GLFWwindow* window);
+bool updateSnakePosition();
 void resetGame();
 void renderRestartPrompt();
 void updateGame(GLFWwindow* window);
@@ -103,11 +106,6 @@ void drawBanana(float spawnX, float spawnY);
 void drawSnake();
 void drawSnakeHead(const float* color);
 void drawSnakeTail(const float* color);
-
-void processInput(GLFWwindow* window);
-
-bool updateSnakePosition();
-void resetGame();
 
 int main(int argc, char** argv)
 {
@@ -585,4 +583,3 @@ void drawSnake()
     }
     drawSnakeHead(snakeHeadColor);
 }
-
