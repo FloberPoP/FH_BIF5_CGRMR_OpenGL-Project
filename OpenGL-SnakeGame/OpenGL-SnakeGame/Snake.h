@@ -17,9 +17,10 @@ public:
 	void Grow();
 
 
-	SnakePart* GetTail() { return tail; }
-	SnakePart& GetHead() { return *head; }
-	glm::vec2 GetPos() { return head->pos; }
+	const SnakePart* GetTail() const { return tail; }
+	const SnakePart& GetHead() const { return *head; }
+	const glm::vec2 GetPos() const { return head->pos; }
+	const glm::vec2 GetTailDir() const { return (tail->prev) ? glm::normalize(tail->prev->pos - tail->pos) : dir; }
 
 	glm::vec2 dir;
 
