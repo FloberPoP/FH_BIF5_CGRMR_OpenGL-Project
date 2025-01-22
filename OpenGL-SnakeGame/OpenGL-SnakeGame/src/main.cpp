@@ -12,6 +12,7 @@
 #include "../Snake.h"
 #include "../Grid.h"
 #include "../TextRenderer.h"
+#include <vector>
 # define M_PI           3.14159265358979323846
 
 // Window dimensions
@@ -24,6 +25,8 @@ Grid GRID = Grid();
 const float SNAKE_SIZE = GRID.GRID_STEP * 0.9f; // Snake size relative to grid field
 
 Snake snake = Snake();
+vector<Fruit> fruits;
+
 
 int lastDirInput = 0;
 int currentDirInput = 0;
@@ -166,6 +169,11 @@ bool updateSnakePosition()
     {
         score++;
         snake.Grow();
+        fruit = Fruit();
+        for (int i = 0; i < 1 + score / 10; i++)
+        {
+            SetRandomPos();
+        }
         fruit = Fruit();
     }
 

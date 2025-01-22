@@ -2,13 +2,15 @@
 
 glm::vec2 fruitPos = glm::vec2(0.0f, 0.0f);
 
-Fruit::Fruit()
+
+Fruit::Fruit(const int score)
 {
     SetRandomPos();
 }
 
 void Fruit::SetRandomPos()
 {
+
     int gridX = rand() % Grid::GRID_SIZE;
     int gridY = rand() % Grid::GRID_SIZE;
     _pos = glm::vec2(
