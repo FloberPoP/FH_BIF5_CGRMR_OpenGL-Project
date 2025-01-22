@@ -153,10 +153,14 @@
     <ClInclude Include="Grid.h" />
     <ClInclude Include="Snake.h" />
     <ClInclude Include="SnakePart.h" />
+    <ClInclude Include="src\stb_image.h" />
     <ClInclude Include="TextRenderer.h" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="scores.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="assets\robo.png" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
