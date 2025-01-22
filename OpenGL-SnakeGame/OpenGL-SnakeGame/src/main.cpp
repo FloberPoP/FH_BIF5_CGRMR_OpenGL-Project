@@ -172,7 +172,7 @@ bool updateSnakePosition()
             snake->Grow();
             fruit = Fruit();
             
-            if (1 + score / 10) 
+            if (1 + (score / 10)) 
             {
                 fruits.push_back(Fruit());
             }
