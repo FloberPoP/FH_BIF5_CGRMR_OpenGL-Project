@@ -140,6 +140,7 @@
     <ClCompile Include="Snake.cpp" />
     <ClCompile Include="SnakePart.cpp" />
     <ClCompile Include="src\main.cpp" />
+    <ClCompile Include="TextRenderer.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="shaders\fragment_shader.frag" />
@@ -150,6 +151,7 @@
     <ClInclude Include="Grid.h" />
     <ClInclude Include="Snake.h" />
     <ClInclude Include="SnakePart.h" />
+    <ClInclude Include="TextRenderer.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

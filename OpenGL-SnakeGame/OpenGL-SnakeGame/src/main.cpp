@@ -11,11 +11,13 @@
 #include <GL/freeglut.h>
 #include "../Snake.h"
 #include "../Grid.h"
+#include "../TextRenderer.h"
 # define M_PI           3.14159265358979323846
 
 // Window dimensions
 const unsigned int WIDTH = 800;
 const unsigned int HEIGHT = 800;
+
 
 Grid GRID = Grid();
 
@@ -63,19 +65,26 @@ void main()
 }
 )";
 
-// Function to draw text at a specific position
-void renderTextOnScreen(const std::string& text, float x, float y, const float* color)
-{
-    glColor3fv(color); // Set the text color
-    glRasterPos2f(x, y); // Set the position for text rendering
 
-    // Render each character
-    for (char c : text)
-    {
-        glutBitmapCharacter(GLUT_BITMAP_HELVETICA_18, c);
-    }
+#pragma region Score
+
+#pragma endregion
+
+// Render the restart button text
+void renderRestartPrompt() {
+    float textColor[] = { 1.0f, 1.0f, 0.0f }; // Yellow color for visibility
+    TextRenderer::renderTextOnScreen("Press 'R' to Restart or 'ESC' to Exit", -0.5f, -0.8f, textColor);
 }
 
+// Reset the game state for a restart
+void resetGame() {
+    snake = Snake();            // Reset the snake
+    fruit = Fruit();            // Reset the fruit
+    score = 0;                  // Reset the score
+    lastDirInput = 0;           // Reset direction input
+    currentDirInput = 0;
+    movementTimer = 0.0f;       // Reset movement timer
+}
 
 // Grid rendering
 void drawGrid()
@@ -351,13 +360,39 @@ int main(int argc, char** argv)
         movementTimer += deltaTime;
 
         // Update snake position
-        if (movementCooldown <= movementTimer)
-        {
+        if (movementCooldown <= movementTimer) {
             movementTimer -= movementCooldown;
-            if (!updateSnakePosition())
-            {
+            if (!updateSnakePosition()) {
                 std::cout << "Game Over! Final Score: " << score << std::endl;
-                break;
+
+                // Write score to file
+                TextRenderer::writeScoreToFile(score);
+
+                // Read and display the scoreboard
+                std::vector<int> scores = TextRenderer::readScoresFromFile();
+
+                // End-game rendering loop
+                bool restart = false;
+                while (!restart) {
+                    // Render the scoreboard
+                    glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
+                    glClear(GL_COLOR_BUFFER_BIT);
+                    TextRenderer::renderScoreboard(scores);
+                    renderRestartPrompt();
+                    glfwSwapBuffers(window);
+                    glfwPollEvents();
+
+                    // Check for restart or exit input
+                    if (glfwGetKey(window, GLFW_KEY_R) == GLFW_PRESS) {
+                        resetGame();  // Reset game state
+                        restart = true;
+                    }
+                    else if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS) {
+                        glfwSetWindowShouldClose(window, true);  // Close the game
+                        restart = true;
+                    }
+                }
+                break; // Exit the main game loop to restart
             }
             lastDirInput = currentDirInput;
         }
@@ -383,7 +418,7 @@ int main(int argc, char** argv)
 
         // Render text
         float textColor[] = { 1.0f, 1.0f, 1.0f };
-        renderTextOnScreen("Score: " + std::to_string(score), -0.9f, -0.95f, textColor);
+        TextRenderer::renderTextOnScreen("Score: " + std::to_string(score), -0.9f, -0.95f, textColor);
 
         // Swap buffers and poll IO events
         glfwSwapBuffers(window);
