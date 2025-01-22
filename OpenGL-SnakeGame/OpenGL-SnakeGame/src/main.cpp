@@ -90,9 +90,8 @@ void renderRestartPrompt() {
 // Reset the game state for a restart
 void resetGame() {
     delete snake;
-    snake = new Snake();            // Reset the snake
-    fruits.clear();
-    fruits.push_back(Fruit());            // Reset the fruits
+    snake = new Snake();        // Reset the snake
+    fruits.clear();             // Reset the fruits
     score = 0;                  // Reset the score
     lastDirInput = 0;           // Reset direction input
     currentDirInput = 0;
