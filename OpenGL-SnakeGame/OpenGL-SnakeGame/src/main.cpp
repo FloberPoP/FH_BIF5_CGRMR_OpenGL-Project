@@ -69,6 +69,13 @@ void main()
 }
 )";
 
+void updateLightColorOverTime(float elapsedTime) {
+    float red = (sin(elapsedTime) + 1.0f) / 2.0f;   // Oscillates between 0 and 1
+    float green = (sin(elapsedTime + 2.0f) + 1.0f) / 2.0f; // Phase shift for variety
+    float blue = (sin(elapsedTime + 4.0f) + 1.0f) / 2.0f;  // Another phase shift
+
+    LIGHT.setLightColor(red, green, blue);
+}
 
 #pragma region Score
 
@@ -173,7 +180,6 @@ bool updateSnakePosition()
     for (std::vector<Fruit>::iterator it = fruits.begin(); it != fruits.end(); ++it) {
         if (snake->CollidesWithFruit(*it))
         {
-            LIGHT.toggle();
             ++score;
             snake->Grow();
             *it = Fruit();
@@ -376,10 +382,16 @@ int main(int argc, char** argv)
 
     glEnable(GL_LIGHTING);   // Enable lighting
     glEnable(GL_COLOR_MATERIAL); // Allows glColor to interact with light
+    glEnable(GL_FRAMEBUFFER_SRGB);
 
     // Render loop
     while (!glfwWindowShouldClose(window))
     {
+        float elapsedTime = static_cast<float>(glfwGetTime());
+
+        // Update light color
+        updateLightColorOverTime(elapsedTime);
+
         // Input
         processInput(window);
 
@@ -405,10 +417,15 @@ int main(int argc, char** argv)
                 // End-game rendering loop
                 bool restart = false;
                 while (!restart) {
+                    if (!LIGHT.isActive()) {
+                        LIGHT.toggle(); // Ensure the light is active
+                    }
+
+                    // Reset the light to a default state (perfect white light)
+                    LIGHT.setLightColor(1.0f, 1.0f, 1.0f); // Reset to white light
+
                     // Render the scoreboard
-                    if (LIGHT.isActive() == false)
-                        LIGHT.toggle();
-                    glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
+                    glClearColor(0.2f, 0.3f, 0.3f, 1.0f); // Background color
                     glClear(GL_COLOR_BUFFER_BIT);
                     TextRenderer::renderScoreboard(scores, score);
                     renderRestartPrompt();
@@ -431,7 +448,7 @@ int main(int argc, char** argv)
 
         // Render
         glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
-        glClear(GL_COLOR_BUFFER_BIT);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         // Draw grid
         drawGrid();

@@ -11,6 +11,7 @@ public:
     void setupDirectionalLight();
     void setupMaterial();
     bool isActive() const;
+    void setLightColor(float red, float green, float blue);
 
 private:
     bool active;
