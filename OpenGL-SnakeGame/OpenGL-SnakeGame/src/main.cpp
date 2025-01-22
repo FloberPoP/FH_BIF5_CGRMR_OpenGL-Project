@@ -9,7 +9,7 @@
 #include <chrono>
 #include "glm/glm.hpp"
 #include <GL/freeglut.h>
-#include "../Snake.h"
+#include "../snake.h"
 #include "../Grid.h"
 #include "../TextRenderer.h"
 #include <vector>
@@ -24,9 +24,8 @@ Grid GRID = Grid();
 
 const float SNAKE_SIZE = GRID.GRID_STEP * 0.9f; // Snake size relative to grid field
 
-Snake snake = Snake();
+Snake* snake;
 vector<Fruit> fruits;
-
 
 int lastDirInput = 0;
 int currentDirInput = 0;
@@ -81,7 +80,8 @@ void renderRestartPrompt() {
 
 // Reset the game state for a restart
 void resetGame() {
-    snake = Snake();            // Reset the snake
+    delete snake;
+    snake = new Snake();            // Reset the snake
     fruit = Fruit();            // Reset the fruit
     score = 0;                  // Reset the score
     lastDirInput = 0;           // Reset direction input
@@ -125,26 +125,26 @@ void processInput(GLFWwindow* window)
 {
     if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS && lastDirInput != GLFW_KEY_S)
     {
-        snake.dir.x = 0.0f;
-        snake.dir.y = 1.0f;
+        snake->dir.x = 0.0f;
+        snake->dir.y = 1.0f;
         currentDirInput = GLFW_KEY_W;
     }
     else if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS && lastDirInput != GLFW_KEY_W)
     {
-        snake.dir.x = 0.0f;
-        snake.dir.y = -1.0f;
+        snake->dir.x = 0.0f;
+        snake->dir.y = -1.0f;
         currentDirInput = GLFW_KEY_S;
     }
     else if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS && lastDirInput != GLFW_KEY_D)
     {
-        snake.dir.x = -1.0f;
-        snake.dir.y = 0.0f;
+        snake->dir.x = -1.0f;
+        snake->dir.y = 0.0f;
         currentDirInput = GLFW_KEY_A;
     }
     else if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS && lastDirInput != GLFW_KEY_A)
     {
-        snake.dir.x = 1.0f;
-        snake.dir.y = 0.0f;
+        snake->dir.x = 1.0f;
+        snake->dir.y = 0.0f;
         currentDirInput = GLFW_KEY_D;
     }
 }
@@ -153,22 +153,22 @@ void processInput(GLFWwindow* window)
 bool updateSnakePosition()
 {
     // Update position
-    snake.ApplyMovement();
+    snake->ApplyMovement();
     
-    if (snake.CollidesWithBorder())
+    if (snake->CollidesWithBorder())
     {
         return false;
     }
 
-    if (snake.CollidesWithSelf())
+    if (snake->CollidesWithSelf())
     {
         return false;
     }
 
-    if (snake.CollidesWithFruit(fruit))
+    if (snake->CollidesWithFruit(fruit))
     {
         score++;
-        snake.Grow();
+        snake->Grow();
         fruit = Fruit();
         for (int i = 0; i < 1 + score / 10; i++)
         {
@@ -272,12 +272,12 @@ void drawBanana(float spawnX, float spawnY)
 
 void drawSnakeHead(const float* color)
 {
-    drawCircle(snake.GetHead().pos.x, snake.GetHead().pos.y, SNAKE_SIZE / 2, color);
+    drawCircle(snake->GetHead().pos.x, snake->GetHead().pos.y, SNAKE_SIZE / 2, color);
 
-    float quadWidth = (snake.dir.x != 0) ? SNAKE_SIZE / 2 : SNAKE_SIZE;
-    float quadHeight = (snake.dir.y != 0) ? SNAKE_SIZE / 2 : SNAKE_SIZE;
-    float quadPosX = snake.GetHead().pos.x - (snake.dir.x * SNAKE_SIZE / 4);
-    float quadPosY = snake.GetHead().pos.y - (snake.dir.y * SNAKE_SIZE / 4);
+    float quadWidth = (snake->dir.x != 0) ? SNAKE_SIZE / 2 : SNAKE_SIZE;
+    float quadHeight = (snake->dir.y != 0) ? SNAKE_SIZE / 2 : SNAKE_SIZE;
+    float quadPosX = snake->GetHead().pos.x - (snake->dir.x * SNAKE_SIZE / 4);
+    float quadPosY = snake->GetHead().pos.y - (snake->dir.y * SNAKE_SIZE / 4);
 
     drawQuad(
         quadPosX,
@@ -288,7 +288,7 @@ void drawSnakeHead(const float* color)
 void drawSnakeTail(const float* color)
 {
     // Buggy, maybe just quad like rest of body?
-    drawTrinagle(snake.GetTail()->pos.x, snake.GetTail()->pos.y, SNAKE_SIZE, SNAKE_SIZE, snake.dir.x, snake.dir.y, color);
+    drawTrinagle(snake->GetTail()->pos.x, snake->GetTail()->pos.y, SNAKE_SIZE, SNAKE_SIZE, snake->dir.x, snake->dir.y, color);
 }
 
 void drawSnake()
@@ -299,7 +299,7 @@ void drawSnake()
     if (score > 0)
     {
         drawSnakeTail(snakeBodyColor);
-        for (SnakePart* sp = snake.GetTail()->prev; sp->prev != nullptr; sp = sp->prev)
+        for (SnakePart* sp = snake->GetTail()->prev; sp->prev != nullptr; sp = sp->prev)
         {
             drawQuad(sp->pos.x, sp->pos.y, SNAKE_SIZE, SNAKE_SIZE, snakeBodyColor);
         }
@@ -310,6 +310,7 @@ void drawSnake()
 int main(int argc, char** argv)
 {
     Grid GRID = Grid();
+    snake = new Snake();
 
     // Initialize GLUT
     glutInit(&argc, argv);
@@ -400,7 +401,6 @@ int main(int argc, char** argv)
                         restart = true;
                     }
                 }
-                break; // Exit the main game loop to restart
             }
             lastDirInput = currentDirInput;
         }

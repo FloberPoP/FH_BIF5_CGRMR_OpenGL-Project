@@ -8,7 +8,7 @@ class Snake
 {
 public:
 	Snake();
-	~Snake() { delete tail; }
+	~Snake();
 	void ApplyMovement();
 	bool CollidesWithBorder();
 	bool CollidesWithSelf();
