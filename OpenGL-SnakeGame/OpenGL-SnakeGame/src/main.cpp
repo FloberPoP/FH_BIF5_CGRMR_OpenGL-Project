@@ -59,14 +59,11 @@ const char* vertexShaderSource = R"(
 layout (location = 0) in vec3 aPos;
 layout (location = 1) in vec2 aTexCoord;
 
-out vec2 TexCoord;
+out vec2 TexCoords;
 
-uniform vec2 offset;
-
-void main()
-{
-    gl_Position = vec4(aPos.x + offset.x, aPos.y + offset.y, aPos.z, 1.0);
-    TexCoord = aTexCoord;
+void main() {
+    gl_Position = projection * view * model * vec4(aPos, 1.0f);
+    TexCoords = aTexCoord;
 }
 )";
 
@@ -76,11 +73,10 @@ out vec4 FragColor;
 
 in vec2 TexCoord;
 
-uniform sampler2D ourTexture;
+uniform sampler2D texture1;
 
-void main()
-{
-    FragColor = texture(ourTexture, TexCoord);
+void main() {
+    FragColor = texture(texture1, TexCoords);
 }
 )";
 
@@ -113,6 +109,12 @@ void drawSnakeTail(const float* color);
 
 void processInput(GLFWwindow* window);
 std::string switchConverter(bool b);
+
+GLuint loadTexture(const char* filePath);
+void drawTexturedQuad(float x, float y, float w, float h, GLuint texture);
+void drawSnakeBody();
+
+GLuint snakeTexture;
 
 int main(int argc, char** argv)
 {
@@ -163,7 +165,10 @@ int main(int argc, char** argv)
     glEnable(GL_COLOR_MATERIAL); // Allows glColor to interact with light
     glEnable(GL_FRAMEBUFFER_SRGB);
 
+    initShaders();
     //initGL();
+
+    snakeTexture = loadTexture("assets/robo.png");
 
     // Render loop
     while (!glfwWindowShouldClose(window))
@@ -186,23 +191,19 @@ int main(int argc, char** argv)
 // Initialize shaders and OpenGL objects
 void initShaders()
 {
-    // Compile vertex shader
     GLuint vertexShader = glCreateShader(GL_VERTEX_SHADER);
     glShaderSource(vertexShader, 1, &vertexShaderSource, nullptr);
     glCompileShader(vertexShader);
 
-    // Compile fragment shader
     GLuint fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
     glShaderSource(fragmentShader, 1, &fragmentShaderSource, nullptr);
     glCompileShader(fragmentShader);
 
-    // Link shaders into a program
     shaderProgram = glCreateProgram();
     glAttachShader(shaderProgram, vertexShader);
     glAttachShader(shaderProgram, fragmentShader);
     glLinkProgram(shaderProgram);
 
-    // Clean up shaders
     glDeleteShader(vertexShader);
     glDeleteShader(fragmentShader);
 }
@@ -210,21 +211,37 @@ void initShaders()
 // Initialize OpenGL settings
 void initGL()
 {
-    // Enable depth testing
-    glEnable(GL_DEPTH_TEST);
+    // Define vertices (positions and texture coordinates)
+    float vertices[] = {
+        -0.5f, -0.5f, 0.0f,  0.0f, 0.0f, // Bottom-left
+         0.5f, -0.5f, 0.0f,  1.0f, 0.0f, // Bottom-right
+         0.5f,  0.5f, 0.0f,  1.0f, 1.0f, // Top-right
+        -0.5f,  0.5f, 0.0f,  0.0f, 1.0f  // Top-left
+    };
 
-    // Initialize shaders
-    initShaders();
+    // Define indices for two triangles
+    unsigned int indices[] = {
+        0, 1, 2,
+        2, 3, 0
+    };
 
-    // Setup VAO, VBO, and EBO
     glGenVertexArrays(1, &VAO);
     glGenBuffers(1, &VBO);
     glGenBuffers(1, &EBO);
 
     glBindVertexArray(VAO);
 
-    // Bind and set up VBO and EBO here...
-    // TODO
+    glBindBuffer(GL_ARRAY_BUFFER, VBO);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
+
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
+    glEnableVertexAttribArray(0);
+
+    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
+    glEnableVertexAttribArray(1);
 
     glBindVertexArray(0);
 }
@@ -617,7 +634,13 @@ void drawSnake()
         drawSnakeTail(snakeBodyColor);
         for (SnakePart* sp = snake->GetTail()->prev; sp->prev != nullptr; sp = sp->prev)
         {
-            drawQuad(sp->pos.x, sp->pos.y, SNAKE_SIZE, SNAKE_SIZE, snakeBodyColor);
+            //drawQuad(sp->pos.x, sp->pos.y, SNAKE_SIZE, SNAKE_SIZE, snakeBodyColor);
+
+            glEnable(GL_BLEND);
+            glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+            glDisable(GL_DEPTH_TEST);  // Disable depth testing
+            drawTexturedQuad(sp->pos.x, sp->pos.y, SNAKE_SIZE, SNAKE_SIZE, snakeTexture);
+            glEnable(GL_DEPTH_TEST);   // Re-enable depth testing
         }
     }
     drawSnakeHead(snakeHeadColor);
@@ -629,4 +652,77 @@ std::string switchConverter(bool b)
         return "ON";
     else
         return "OFF";
+}
+
+GLuint loadTexture(const char* filePath) {
+    GLuint texture;
+    glGenTextures(1, &texture);
+    glBindTexture(GL_TEXTURE_2D, texture);
+
+    // Set texture wrapping and filtering options
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+    // Load image
+    int width, height, nrChannels;
+    unsigned char* data = stbi_load(filePath, &width, &height, &nrChannels, 0);
+    if (data) {
+        GLenum format = (nrChannels == 4) ? GL_RGBA : GL_RGB;
+        glTexImage2D(GL_TEXTURE_2D, 0, format, width, height, 0, format, GL_UNSIGNED_BYTE, data);
+        glGenerateMipmap(GL_TEXTURE_2D);
+    }
+    else {
+        std::cerr << "Failed to load texture: " << filePath << std::endl;
+    }
+    stbi_image_free(data);
+
+    return texture;
+}
+
+void drawTexturedQuad(float x, float y, float w, float h, GLuint texture) {
+    glUseProgram(shaderProgram);
+    glActiveTexture(GL_TEXTURE1);
+    glBindTexture(GL_TEXTURE_2D, texture);
+    glUniform1i(glGetUniformLocation(shaderProgram, "texture1"), 0);
+
+    float vertices[] = {
+        // Positions          // Texture Coords
+        x - w / 2, y - h / 2,  0.0f, 0.0f, // Bottom-left
+        x + w / 2, y - h / 2,  1.0f, 0.0f, // Bottom-right
+        x + w / 2, y + h / 2,  1.0f, 1.0f, // Top-right
+        x - w / 2, y + h / 2,  0.0f, 1.0f  // Top-left
+    };
+
+    unsigned int indices[] = {
+        0, 1, 2,
+        2, 3, 0
+    };
+
+    glGenVertexArrays(1, &VAO);
+    glGenBuffers(1, &VBO);
+    glGenBuffers(1, &EBO);
+
+    glBindVertexArray(VAO);
+
+    glBindBuffer(GL_ARRAY_BUFFER, VBO);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
+
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
+    glEnableVertexAttribArray(0);
+
+    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
+    glEnableVertexAttribArray(1);
+
+    glBindVertexArray(0);
+}
+
+void drawSnakeBody() {
+    for (SnakePart* sp = snake->GetTail()->prev; sp->prev != nullptr; sp = sp->prev) {
+        drawTexturedQuad(sp->pos.x, sp->pos.y, SNAKE_SIZE, SNAKE_SIZE, snakeTexture);
+    }
 }
