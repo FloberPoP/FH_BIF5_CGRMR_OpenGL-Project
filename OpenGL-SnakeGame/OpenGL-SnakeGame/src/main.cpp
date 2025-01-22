@@ -289,8 +289,8 @@ void drawSnakeHead(const float* color)
 
 void drawSnakeTail(const float* color)
 {
-    // Buggy, maybe just quad like rest of body?
-    drawTrinagle(snake->GetTail()->pos.x, snake->GetTail()->pos.y, SNAKE_SIZE, SNAKE_SIZE, snake->dir.x, snake->dir.y, color);
+    glm::vec2 dir = snake->GetTailDir();
+    drawTrinagle(snake->GetTail()->pos.x, snake->GetTail()->pos.y, SNAKE_SIZE, SNAKE_SIZE, dir.x, dir.y, color);
 }
 
 void drawSnake()
