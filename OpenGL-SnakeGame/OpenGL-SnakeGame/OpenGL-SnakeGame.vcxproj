@@ -135,6 +135,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="DirectionalLight.cpp" />
     <ClCompile Include="Fruit.cpp" />
     <ClCompile Include="Grid.cpp" />
     <ClCompile Include="Snake.cpp" />
@@ -147,11 +148,15 @@
     <None Include="shaders\vertex_shader.vert" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="DirectionalLight.h" />
     <ClInclude Include="Fruit.h" />
     <ClInclude Include="Grid.h" />
     <ClInclude Include="Snake.h" />
     <ClInclude Include="SnakePart.h" />
     <ClInclude Include="TextRenderer.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <Text Include="scores.txt" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

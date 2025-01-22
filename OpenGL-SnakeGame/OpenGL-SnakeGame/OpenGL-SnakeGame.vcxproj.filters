@@ -33,6 +33,9 @@
     <ClCompile Include="TextRenderer.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="DirectionalLight.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="shaders\vertex_shader.vert" />
@@ -54,5 +57,11 @@
     <ClInclude Include="TextRenderer.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="DirectionalLight.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <Text Include="scores.txt" />
   </ItemGroup>
 </Project>

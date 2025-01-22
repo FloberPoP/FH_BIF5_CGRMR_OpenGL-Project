@@ -170,10 +170,10 @@ bool updateSnakePosition()
     }
     
     for(Fruit fruit : fruits)
-    {
-<<<<<<< Updated upstream
+    {       
         if (snake->CollidesWithFruit(fruit))
         {
+            LIGHT.toggle();
             ++score;
             snake->Grow();
             fruit = Fruit();
@@ -182,15 +182,6 @@ bool updateSnakePosition()
             {
                 fruits.push_back(Fruit());
             }
-=======
-        LIGHT.toggle();
-        score++;
-        snake->Grow();
-        fruit = Fruit();
-        for (int i = 0; i < 1 + score / 10; i++)
-        {
-            //SetRandomPos();
->>>>>>> Stashed changes
         }
     }
 
