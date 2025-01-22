@@ -40,7 +40,7 @@ float deltaTime;
 
 // Counter for collisions
 int score = 0;
-
+bool OnHit = false;
 // Fruit position
 // float fruitX = -0.85f;
 // float fruitY = -0.85f;
@@ -84,6 +84,7 @@ void renderRestartPrompt() {
 void resetGame() {
     delete snake;
     snake = new Snake();            // Reset the snake
+    fruits.clear();
     fruits.push_back(Fruit());            // Reset the fruits
     score = 0;                  // Reset the score
     lastDirInput = 0;           // Reset direction input
@@ -168,23 +169,22 @@ bool updateSnakePosition()
     {
         return false;
     }
-    
-    for(Fruit fruit : fruits)
-    {       
-        if (snake->CollidesWithFruit(fruit))
+
+    for (std::vector<Fruit>::iterator it = fruits.begin(); it != fruits.end(); ++it) {
+        if (snake->CollidesWithFruit(*it))
         {
             LIGHT.toggle();
             ++score;
             snake->Grow();
-            fruit = Fruit();
-            
-            if (1 + (score / 10)) 
-            {
-                fruits.push_back(Fruit());
-            }
+            *it = Fruit();
+            OnHit = true;
         }
     }
-
+    if (OnHit && score % 10 == 0)
+    {
+        fruits.push_back(Fruit());
+        OnHit = false;
+    }
     return true;
 }
 
