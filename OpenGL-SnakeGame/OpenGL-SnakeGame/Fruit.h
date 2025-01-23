@@ -4,7 +4,15 @@
 #include <cmath>
 enum FruitE {
 	Cherry = 0,
-	Banana = 1
+	Banana = 1,
+	Meat = 2,
+	Eggplant = 3,
+	Beer = 4,
+	Orange = 5,
+	Pineapple = 6,
+	Peach = 7,
+	Brocoli = 8,
+	Pear = 9
 };
 class Fruit
 {

@@ -4,7 +4,7 @@ glm::vec2 fruitPos = glm::vec2(0.0f, 0.0f);
 
 Fruit::Fruit()
 {
-    fruitType = FruitE(rand() % 2);
+    fruitType = FruitE(rand() % 10);
     SetRandomPos();
 }
 
