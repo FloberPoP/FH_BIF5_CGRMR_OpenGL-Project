@@ -162,6 +162,7 @@
     <Text Include="scores.txt" />
   </ItemGroup>
   <ItemGroup>
+    <Image Include="assets\grass.jpg" />
     <Image Include="assets\robo.png" />
     <Image Include="textures\border.png" />
     <Image Include="textures\brick.jpg" />

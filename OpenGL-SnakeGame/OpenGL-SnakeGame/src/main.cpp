@@ -141,6 +141,7 @@ void renderNormalMap();
 void drawTexturedQuad(float x, float y, float w, float h, float dirX, float dirY, const float* color, GLuint texture);
 
 GLuint snakeTexture;
+GLuint grassTexture;
 
 int main(int argc, char** argv)
 {
@@ -199,7 +200,7 @@ int main(int argc, char** argv)
 
     // Load Textures
     snakeTexture = loadTexture("assets/snakeBody.png");
-
+    grassTexture = loadTexture("assets/grass.jpg");
     // Render loop
     while (!glfwWindowShouldClose(window))
     {
@@ -331,6 +332,8 @@ void renderGame()
     
     // Draw Background with NormalMap
     renderNormalMap();
+    float color[] = { 1.0f, 1.0f, 1.0f };
+    drawTexturedQuad(0, 0, Grid::BORDER_OFFSET*2, Grid::BORDER_OFFSET*2, 0, 0, color, grassTexture);
 
     // Draw grid
     drawGrid();
