@@ -9,15 +9,22 @@
 #include <chrono>
 #include "glm/glm.hpp"
 #include <GL/freeglut.h>
+#include <vector>
+# define M_PI           3.14159265358979323846
+
+#include "stb_image.h"
 #include "../snake.h"
 #include "../Grid.h"
 #include "../TextRenderer.h"
-#include <vector>
 #include "../DirectionalLight.h"
-#define STB_IMAGE_IMPLEMENTATION
-#include "stb_image.h"
 #include "../Camera.h"
-# define M_PI           3.14159265358979323846
+
+#include "../VertexBuffer.h"
+#include "../VertexArray.h"
+#include "../IndexBuffer.h"
+#include "../Shader.h"
+#include "../Renderer.h"
+#include "../Texture.h"
 
 // Window dimensions
 const unsigned int WIDTH = 800;
@@ -50,9 +57,6 @@ bool ColorChange = true;
 // Shader program
 GLuint shaderProgram;
 
-// Vertex Array Object (VAO) and Vertex Buffer Object (VBO)
-GLuint VAO, VBO, EBO;
-
 // Shader source code
 const char* vertexShaderSource = R"(
 #version 330 core
@@ -80,8 +84,6 @@ void main() {
 }
 )";
 
-void initShaders();
-void initGL();
 void processInput(GLFWwindow* window);
 bool updateSnakePosition();
 void resetGame();
@@ -100,6 +102,8 @@ void drawTrinagle(float x, float y, float w, float h, float dirX, float dirY, co
 void drawCircle(float x, float y, float radius, const float* color);
 void drawLine(float x1, float y1, float x2, float y2, const float* color);
 
+void drawTexture(float x, float y, float w, float h);
+
 void drawCherry(float spawnX, float spawnY);
 void drawBanana(float spawnX, float spawnY);
 
@@ -110,140 +114,96 @@ void drawSnakeTail(const float* color);
 void processInput(GLFWwindow* window);
 std::string switchConverter(bool b);
 
-GLuint loadTexture(const char* filePath);
-void drawTexturedQuad(float x, float y, float w, float h, GLuint texture);
-void drawSnakeBody();
+Renderer renderer;
 
-GLuint snakeTexture;
+Shader* RoboShader;
+Texture* RoboTexture;
 
-int main(int argc, char** argv)
+
+GLFWwindow* InitWindow()
 {
-    Grid GRID = Grid();
-    snake = new Snake();
-    fruits.push_back(Fruit());
-    // Initialize GLUT
-    glutInit(&argc, argv);
-
-    // Initialize GLFW
+    // Initialise GLFW
     if (!glfwInit())
     {
-        std::cerr << "Failed to initialize GLFW" << std::endl;
-        return -1;
+        fprintf(stderr, "Failed to initialize GLFW\n");
+        getchar();
+        return nullptr;
     }
 
-    // Initialize GLFW
-    if (!glfwInit())
-    {
-        std::cerr << "Failed to initialize GLFW" << std::endl;
-        return -1;
-    }
+    glfwWindowHint(GLFW_SAMPLES, 4);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
+    glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE); // To make MacOS happy; should not be needed
+    glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
-    // Create a windowed mode window and its OpenGL context
-    GLFWwindow* window = glfwCreateWindow(WIDTH, HEIGHT, "Snake Game", NULL, NULL);
-    if (!window)
-    {
-        std::cerr << "Failed to create GLFW window" << std::endl;
+    // Open a window and create its OpenGL context
+    GLFWwindow* window = glfwCreateWindow(1024, 768, "Snake", NULL, NULL);
+    if (window == NULL) {
+        fprintf(stderr, "Failed to open GLFW window. If you have an Intel GPU, they are not 3.3 compatible. Try the 2.1 version of the tutorials.\n");
+        getchar();
         glfwTerminate();
-        return -1;
-    }
+        return nullptr;
 
-    // Make the window's context current
+    }
     glfwMakeContextCurrent(window);
 
     // Load OpenGL function pointers using GLAD
-    if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
-    {
+    if (!gladLoadGL()) {
         std::cerr << "Failed to initialize GLAD" << std::endl;
-        return -1;
+        return nullptr;
     }
 
+    std::cout << "Using GL Version: " << glGetString(GL_VERSION) << std::endl;
+
+    // Ensure we can capture the escape key being pressed below
+    glfwSetInputMode(window, GLFW_STICKY_KEYS, GL_TRUE);
+
+    return window;
+}
+
+int main(int argc, char** argv)
+{
+    // Initialize GLUT
+    glutInit(&argc, argv);
+
+    GLFWwindow* window = InitWindow();
+    if (!window)
+        return -1;
+
+    
+    Grid GRID = Grid();
+    snake = new Snake();
+    fruits.push_back(Fruit());
     currentTime = static_cast<float>(glfwGetTime());
 
+    
     // Setup the directional light
     LIGHT.setupDirectionalLight();
     glEnable(GL_LIGHTING);   // Enable lighting
     glEnable(GL_COLOR_MATERIAL); // Allows glColor to interact with light
     glEnable(GL_FRAMEBUFFER_SRGB);
-
-    initShaders();
-    //initGL();
-
-    snakeTexture = loadTexture("assets/robo.png");
-
-    // Render loop
-    while (!glfwWindowShouldClose(window))
+    
+    RoboShader = new Shader("shaders/Basic.shader");
+    RoboTexture = new Texture("assets/robo.png");
+    
+    do
     {
         updateGame(window);
-
+        
         renderGame();
 
         // Swap buffers and poll IO events
         glfwSwapBuffers(window);
         glfwPollEvents();
-    }
+    } while (!glfwWindowShouldClose(window));
 
     // Clean up
     delete snake;
+    delete RoboShader;
+    delete RoboTexture;
+
     glfwTerminate();
     return 0;
-}
-
-// Initialize shaders and OpenGL objects
-void initShaders()
-{
-    GLuint vertexShader = glCreateShader(GL_VERTEX_SHADER);
-    glShaderSource(vertexShader, 1, &vertexShaderSource, nullptr);
-    glCompileShader(vertexShader);
-
-    GLuint fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
-    glShaderSource(fragmentShader, 1, &fragmentShaderSource, nullptr);
-    glCompileShader(fragmentShader);
-
-    shaderProgram = glCreateProgram();
-    glAttachShader(shaderProgram, vertexShader);
-    glAttachShader(shaderProgram, fragmentShader);
-    glLinkProgram(shaderProgram);
-
-    glDeleteShader(vertexShader);
-    glDeleteShader(fragmentShader);
-}
-
-// Initialize OpenGL settings
-void initGL()
-{
-    // Define vertices (positions and texture coordinates)
-    float vertices[] = {
-        -0.5f, -0.5f, 0.0f,  0.0f, 0.0f, // Bottom-left
-         0.5f, -0.5f, 0.0f,  1.0f, 0.0f, // Bottom-right
-         0.5f,  0.5f, 0.0f,  1.0f, 1.0f, // Top-right
-        -0.5f,  0.5f, 0.0f,  0.0f, 1.0f  // Top-left
-    };
-
-    // Define indices for two triangles
-    unsigned int indices[] = {
-        0, 1, 2,
-        2, 3, 0
-    };
-
-    glGenVertexArrays(1, &VAO);
-    glGenBuffers(1, &VBO);
-    glGenBuffers(1, &EBO);
-
-    glBindVertexArray(VAO);
-
-    glBindBuffer(GL_ARRAY_BUFFER, VBO);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
-
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
-
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
-    glEnableVertexAttribArray(0);
-
-    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
-    glEnableVertexAttribArray(1);
-
-    glBindVertexArray(0);
 }
 
 // Update game state
@@ -289,8 +249,8 @@ void updateGame(GLFWwindow* window)
 // Render the game
 void renderGame()
 {
-    // Render
-    glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
+    // Clear the screen
+    glClearColor(0.2f, 0.3f, 0.3f, 1.0f); // Base background color
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     // Draw grid
@@ -299,9 +259,13 @@ void renderGame()
     // Draw border
     drawBorder();
 
+    float textColor[] = { 1.0f, 1.0f, 1.0f };
     // Draw fruits
     for (Fruit fruit : fruits)
     {
+        //drawTrinagle(fruit.GetPos().x, fruit.GetPos().y, SNAKE_SIZE, SNAKE_SIZE, 0,1, textColor);
+        drawTexture(fruit.GetPos().x, fruit.GetPos().y, SNAKE_SIZE, SNAKE_SIZE);
+
         switch (fruit.fruitType)
         {
         case 0: // Cherry
@@ -320,7 +284,6 @@ void renderGame()
     drawSnake();
 
     // Render text
-    float textColor[] = { 1.0f, 1.0f, 1.0f };
     TextRenderer::renderTextOnScreen("Score: " + std::to_string(score), -0.9f, -0.95f, textColor);
     TextRenderer::renderTextOnScreen("LightSwitch(C): " + switchConverter(ColorChange) + " | ZoomSwitch(V) " + switchConverter(camera.zoomOffOn), 0.05f, -0.95f, textColor);
 }
@@ -634,13 +597,7 @@ void drawSnake()
         drawSnakeTail(snakeBodyColor);
         for (SnakePart* sp = snake->GetTail()->prev; sp->prev != nullptr; sp = sp->prev)
         {
-            //drawQuad(sp->pos.x, sp->pos.y, SNAKE_SIZE, SNAKE_SIZE, snakeBodyColor);
-
-            glEnable(GL_BLEND);
-            glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-            glDisable(GL_DEPTH_TEST);  // Disable depth testing
-            drawTexturedQuad(sp->pos.x, sp->pos.y, SNAKE_SIZE, SNAKE_SIZE, snakeTexture);
-            glEnable(GL_DEPTH_TEST);   // Re-enable depth testing
+            drawQuad(sp->pos.x, sp->pos.y, SNAKE_SIZE, SNAKE_SIZE, snakeBodyColor);
         }
     }
     drawSnakeHead(snakeHeadColor);
@@ -654,45 +611,17 @@ std::string switchConverter(bool b)
         return "OFF";
 }
 
-GLuint loadTexture(const char* filePath) {
-    GLuint texture;
-    glGenTextures(1, &texture);
-    glBindTexture(GL_TEXTURE_2D, texture);
+void drawTexture(float x, float y, float w, float h)
+{
+    RoboShader->Bind();
+    RoboTexture->Bind();
+    RoboShader->SetUniform1i("u_Texture", 0);
 
-    // Set texture wrapping and filtering options
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-
-    // Load image
-    int width, height, nrChannels;
-    unsigned char* data = stbi_load(filePath, &width, &height, &nrChannels, 0);
-    if (data) {
-        GLenum format = (nrChannels == 4) ? GL_RGBA : GL_RGB;
-        glTexImage2D(GL_TEXTURE_2D, 0, format, width, height, 0, format, GL_UNSIGNED_BYTE, data);
-        glGenerateMipmap(GL_TEXTURE_2D);
-    }
-    else {
-        std::cerr << "Failed to load texture: " << filePath << std::endl;
-    }
-    stbi_image_free(data);
-
-    return texture;
-}
-
-void drawTexturedQuad(float x, float y, float w, float h, GLuint texture) {
-    glUseProgram(shaderProgram);
-    glActiveTexture(GL_TEXTURE1);
-    glBindTexture(GL_TEXTURE_2D, texture);
-    glUniform1i(glGetUniformLocation(shaderProgram, "texture1"), 0);
-
-    float vertices[] = {
-        // Positions          // Texture Coords
-        x - w / 2, y - h / 2,  0.0f, 0.0f, // Bottom-left
-        x + w / 2, y - h / 2,  1.0f, 0.0f, // Bottom-right
-        x + w / 2, y + h / 2,  1.0f, 1.0f, // Top-right
-        x - w / 2, y + h / 2,  0.0f, 1.0f  // Top-left
+    float positions[] = {
+         x - w / 2, y - h / 2, 0.0f, 0.0f, // 0
+         x + w / 2, y - h / 2, 1.0f, 0.0f, // 1
+         x + w / 2, y + h / 2, 1.0f, 1.0f, // 2
+         x - w / 2, y + h / 2, 0.0f, 1.0f  // 3
     };
 
     unsigned int indices[] = {
@@ -700,29 +629,19 @@ void drawTexturedQuad(float x, float y, float w, float h, GLuint texture) {
         2, 3, 0
     };
 
-    glGenVertexArrays(1, &VAO);
-    glGenBuffers(1, &VBO);
-    glGenBuffers(1, &EBO);
+    GLCall(glEnable(GL_BLEND));
+    GLCall(glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA));
 
-    glBindVertexArray(VAO);
+    VertexArray va;
+    VertexBuffer vb(positions, 4 * 4 * sizeof(float));
+    IndexBuffer ib(indices, 6);
 
-    glBindBuffer(GL_ARRAY_BUFFER, VBO);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+    VertexBufferLayout layout;
+    layout.AddFloat(2);
+    layout.AddFloat(2);
 
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
+    va.AddBuffer(vb, layout);
 
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
-    glEnableVertexAttribArray(0);
-
-    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
-    glEnableVertexAttribArray(1);
-
-    glBindVertexArray(0);
-}
-
-void drawSnakeBody() {
-    for (SnakePart* sp = snake->GetTail()->prev; sp->prev != nullptr; sp = sp->prev) {
-        drawTexturedQuad(sp->pos.x, sp->pos.y, SNAKE_SIZE, SNAKE_SIZE, snakeTexture);
-    }
+    renderer.Clear();
+    renderer.Draw(va, ib, *RoboShader);
 }
