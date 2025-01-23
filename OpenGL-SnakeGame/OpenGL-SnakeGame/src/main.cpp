@@ -23,6 +23,9 @@
 const unsigned int WIDTH = 800;
 const unsigned int HEIGHT = 800;
 
+GLuint backgroundTexture;
+GLuint normalMapTexture;
+
 Grid GRID = Grid();
 
 DirectionalLight LIGHT = DirectionalLight();
@@ -56,28 +59,50 @@ GLuint VAO, VBO, EBO;
 // Shader source code
 const char* vertexShaderSource = R"(
 #version 330 core
+
 layout (location = 0) in vec3 aPos;
 layout (location = 1) in vec2 aTexCoord;
 
-out vec2 TexCoords;
+out vec2 TexCoord;
 
 void main() {
-    gl_Position = projection * view * model * vec4(aPos, 1.0f);
-    TexCoords = aTexCoord;
+    gl_Position = vec4(aPos, 1.0f);
+    TexCoord = aTexCoord;
 }
+
 )";
 
 const char* fragmentShaderSource = R"(
 #version 330 core
+
 out vec4 FragColor;
 
 in vec2 TexCoord;
 
-uniform sampler2D texture1;
+// Textures
+uniform sampler2D texture1;       // Diffuse texture (brick.jpg)
+uniform sampler2D normalMap;      // Normal map (brick_normal.jpg)
+
+// Light properties
+uniform vec3 lightPos;            // Light position in world space
+uniform vec3 viewPos;             // Camera/view position
+uniform vec3 lightColor;          // Light color
 
 void main() {
-    FragColor = texture(texture1, TexCoords);
+    // Sample the textures
+    vec3 color = texture(texture1, TexCoord).rgb;       // Diffuse color
+    vec3 normal = texture(normalMap, TexCoord).rgb;     // Normal from normal map
+    normal = normalize(normal * 2.0 - 1.0);             // Transform from [0, 1] to [-1, 1]
+
+    // Lighting calculations
+    vec3 lightDir = normalize(lightPos - vec3(0.0, 0.0, 0.0)); // Light direction (simple planar assumption)
+    float diff = max(dot(normal, lightDir), 0.0);               // Diffuse intensity
+    vec3 diffuse = diff * lightColor;
+
+    // Final color output
+    FragColor = vec4(color * diffuse, 1.0f);            // Combine diffuse color with lighting
 }
+
 )";
 
 void initShaders();
@@ -113,6 +138,8 @@ std::string switchConverter(bool b);
 GLuint loadTexture(const char* filePath);
 void drawTexturedQuad(float x, float y, float w, float h, GLuint texture);
 void drawSnakeBody();
+void drawBackground(GLuint texture, GLuint normalMapTexture);
+void renderNormalMap();
 
 GLuint snakeTexture;
 
@@ -165,8 +192,11 @@ int main(int argc, char** argv)
     glEnable(GL_COLOR_MATERIAL); // Allows glColor to interact with light
     glEnable(GL_FRAMEBUFFER_SRGB);
 
+    backgroundTexture = loadTexture("textures/brick.jpg");
+    normalMapTexture = loadTexture("textures/brick_normal.jpg");
+
     initShaders();
-    //initGL();
+    initGL();
 
     // Render loop
     while (!glfwWindowShouldClose(window))
@@ -174,6 +204,8 @@ int main(int argc, char** argv)
         updateGame(window);
 
         renderGame();
+
+
 
         // Swap buffers and poll IO events
         glfwSwapBuffers(window);
@@ -187,8 +219,7 @@ int main(int argc, char** argv)
 }
 
 // Initialize shaders and OpenGL objects
-void initShaders()
-{
+void initShaders() {
     GLuint vertexShader = glCreateShader(GL_VERTEX_SHADER);
     glShaderSource(vertexShader, 1, &vertexShaderSource, nullptr);
     glCompileShader(vertexShader);
@@ -211,10 +242,11 @@ void initGL()
 {
     // Define vertices (positions and texture coordinates)
     float vertices[] = {
-        -0.5f, -0.5f, 0.0f,  0.0f, 0.0f, // Bottom-left
-         0.5f, -0.5f, 0.0f,  1.0f, 0.0f, // Bottom-right
-         0.5f,  0.5f, 0.0f,  1.0f, 1.0f, // Top-right
-        -0.5f,  0.5f, 0.0f,  0.0f, 1.0f  // Top-left
+        // Positions      // Texture Coords
+        -1.0f, -1.0f, 0.0f,  0.0f, 0.0f, // Bottom-left
+         1.0f, -1.0f, 0.0f,  1.0f, 0.0f, // Bottom-right
+         1.0f,  1.0f, 0.0f,  1.0f, 1.0f, // Top-right
+        -1.0f,  1.0f, 0.0f,  0.0f, 1.0f  // Top-left
     };
 
     // Define indices for two triangles
@@ -223,26 +255,31 @@ void initGL()
         2, 3, 0
     };
 
+    // Generate and bind VAO, VBO, and EBO
     glGenVertexArrays(1, &VAO);
     glGenBuffers(1, &VBO);
     glGenBuffers(1, &EBO);
 
     glBindVertexArray(VAO);
 
+    // Bind and upload vertex data
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
     glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
 
+    // Bind and upload index data
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
 
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
+    // Specify vertex attributes
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0); // Position
     glEnableVertexAttribArray(0);
 
-    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
+    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float))); // Texture Coords
     glEnableVertexAttribArray(1);
 
     glBindVertexArray(0);
 }
+
 
 // Update game state
 void updateGame(GLFWwindow* window)
@@ -291,6 +328,9 @@ void renderGame()
     glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+    // Draw Background with NormalMap
+    renderNormalMap();
+    
     // Draw grid
     drawGrid();
 
@@ -701,4 +741,42 @@ void drawSnakeBody() {
     for (SnakePart* sp = snake->GetTail()->prev; sp->prev != nullptr; sp = sp->prev) {
         drawTexturedQuad(sp->pos.x, sp->pos.y, SNAKE_SIZE, SNAKE_SIZE, snakeTexture);
     }
+}
+
+void drawBackground(GLuint texture, GLuint normalMapTexture)
+{
+    // Use the shader program
+    glUseProgram(shaderProgram);
+
+    // Set textures
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, texture);
+    glUniform1i(glGetUniformLocation(shaderProgram, "texture1"), 0);
+
+    glActiveTexture(GL_TEXTURE1);
+    glBindTexture(GL_TEXTURE_2D, normalMapTexture);
+    glUniform1i(glGetUniformLocation(shaderProgram, "normalMap"), 1);
+
+    // Set uniforms for lighting
+    glUniform3f(glGetUniformLocation(shaderProgram, "lightPos"), 1.0f, 1.0f, 1.0f);
+    glUniform3f(glGetUniformLocation(shaderProgram, "viewPos"), 0.0f, 0.0f, 3.0f);
+    glUniform3f(glGetUniformLocation(shaderProgram, "lightColor"), 1.0f, 1.0f, 1.0f);
+
+    // Bind VAO and draw elements
+    glBindVertexArray(VAO);
+    glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+    glBindVertexArray(0);
+}
+
+void renderNormalMap() {
+    // Use the shader program
+    glUseProgram(shaderProgram);
+
+    // Set uniform values
+    glUniform3f(glGetUniformLocation(shaderProgram, "lightPos"), 1.0f, 1.0f, 1.0f);
+    glUniform3f(glGetUniformLocation(shaderProgram, "viewPos"), 0.0f, 0.0f, 3.0f);
+    glUniform3f(glGetUniformLocation(shaderProgram, "lightColor"), 1.0f, 1.0f, 1.0f);
+
+    // Draw the background with normal mapping
+    drawBackground(backgroundTexture, normalMapTexture);
 }

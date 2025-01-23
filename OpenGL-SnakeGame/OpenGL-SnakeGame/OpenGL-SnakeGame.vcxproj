@@ -163,6 +163,10 @@
   </ItemGroup>
   <ItemGroup>
     <Image Include="assets\robo.png" />
+    <Image Include="textures\border.png" />
+    <Image Include="textures\brick.jpg" />
+    <Image Include="textures\brick_normal.jpg" />
+    <Image Include="textures\floor.png" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
