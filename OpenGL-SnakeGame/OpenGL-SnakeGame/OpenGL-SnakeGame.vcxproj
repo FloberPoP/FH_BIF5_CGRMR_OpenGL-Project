@@ -145,10 +145,6 @@
     <ClCompile Include="TextRenderer.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="shaders\fragment_shader.frag" />
-    <None Include="shaders\vertex_shader.vert" />
-  </ItemGroup>
-  <ItemGroup>
     <ClInclude Include="Camera.h" />
     <ClInclude Include="DirectionalLight.h" />
     <ClInclude Include="Fruit.h" />
@@ -162,7 +158,11 @@
     <Text Include="scores.txt" />
   </ItemGroup>
   <ItemGroup>
+    <Image Include="assets\grass.jpg" />
     <Image Include="assets\robo.png" />
+    <Image Include="assets\brick.jpg" />
+    <Image Include="assets\brick_normal.jpg" />
+    <Image Include="assets\snakeBody.png" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
