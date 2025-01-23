@@ -123,10 +123,6 @@ void drawBorder();
 void drawQuad(float x, float y, float w, float h, const float* color);
 void drawTrinagle(float x, float y, float w, float h, float dirX, float dirY, const float* color);
 void drawCircle(float x, float y, float radius, const float* color);
-void drawLine(float x1, float y1, float x2, float y2, const float* color);
-
-void drawCherry(float spawnX, float spawnY);
-void drawBanana(float spawnX, float spawnY);
 
 void drawSnake();
 void drawSnakeHead(const float* color);
@@ -143,6 +139,11 @@ void drawTexturedQuad(float x, float y, float w, float h, float dirX, float dirY
 GLuint snakeTexture;
 GLuint grassTexture;
 GLuint FruitTextures[10];
+
+float color[] = { 0.3f, 0.3f, 0.3f, 1.0f };
+float fruitColor[] = { 0.8f, 0.8f, 0.8f, 1.0f};
+float snakeBodyColor[] = { 0.0f, 1.0f, 0.5f, 1.0f };
+float snakeHeadColor[] = { 0.0f, 1.0f, 0.2f, 1.0f };
 
 int main(int argc, char** argv)
 {
@@ -344,7 +345,6 @@ void renderGame()
     
     // Draw Background with NormalMap
     renderNormalMap();
-    float color[] = { 1.0f, 1.0f, 1.0f };
     drawTexturedQuad(0, 0, Grid::BORDER_OFFSET*2, Grid::BORDER_OFFSET*2, 0, 1, color, grassTexture);
 
     // Draw grid
@@ -356,7 +356,7 @@ void renderGame()
     // Draw fruits
     for (Fruit fruit : fruits)
     {
-        drawTexturedQuad(fruit.GetPos().x, fruit.GetPos().y, SNAKE_SIZE, SNAKE_SIZE, 0, 1, color, FruitTextures[fruit.fruitType]);
+        drawTexturedQuad(fruit.GetPos().x, fruit.GetPos().y, SNAKE_SIZE, SNAKE_SIZE, 0, 1, fruitColor, FruitTextures[fruit.fruitType]);
     }
 
     // Draw snake
@@ -600,51 +600,6 @@ void drawCircle(float x, float y, float radius, const float* color) {
     glEnd();
 }
 
-// Function to draw a line (for the stem)
-void drawLine(float x1, float y1, float x2, float y2, const float* color) {
-    LIGHT.setupMaterial();
-    glColor3fv(color);
-    glBegin(GL_LINES);
-    glVertex2f(x1, y1);
-    glVertex2f(x2, y2);
-    glEnd();
-}
-
-void drawCherry(float spawnX, float spawnY) 
-{
-    LIGHT.setupMaterial();
-    // Draw the cherries
-    float cherryColor[] = { 1.0f, 0.0f, 0.0f };
-    drawCircle(spawnX - 0.01f, spawnY - 0.01f, 0.01f, cherryColor); // Left cherry (red)
-    drawCircle(spawnX + 0.01f, spawnY - 0.01f, 0.01f, cherryColor);  // Right cherry (red)
-
-    // Draw the stems
-    float stemColor[] = { 0.0f, 0.5f, 0.0f };
-    drawLine(spawnX - 0.01f, spawnY - 0.015f, spawnX + 0.0f, spawnY + 0.02f, stemColor); // Left stem (green)
-    drawLine(spawnX + 0.01f, spawnY - 0.015f, spawnX + 0.0f, spawnY + 0.02f, stemColor);  // Right stem (green)
-
-    // Draw the connecting part of the stems
-    drawLine(spawnX + 0.005f, spawnY + 0.02f, spawnX - 0.005f, spawnY + 0.02f, stemColor); // Connection (green)
-}
-
-void drawBanana(float spawnX, float spawnY)
-{
-    LIGHT.setupMaterial();
-    // Draw the banana
-    float bananaColor1[] = { 1.0f , 0.984f, 0.0f };
-    float bananaColor2[] = { 0.769f, 0.741f, 0.027f };
-    float bananaColor3[] = { 0.2f, 0.302f, 0.302f };
-
-    drawCircle(spawnX - 0.00f, spawnY - 0.00f, 0.02f, bananaColor1);
-    drawCircle(spawnX + 0.005f, spawnY + 0.005f, 0.015f, bananaColor2);
-    drawCircle(spawnX + 0.01f, spawnY + 0.01f, 0.015f, bananaColor3);
-
-    // Draw the end
-    float endColor[] = { 0.2f, 0.11f, 0.067f };
-    drawLine(spawnX - 0.01f, spawnY + 0.02f, spawnX + 0.001f, spawnY + 0.02f, endColor); // Left stem (green)
-    drawLine(spawnX + 0.02f, spawnY - 0.00f, spawnX + 0.02f, spawnY - 0.01f, endColor);  // Right stem (green)
-}
-
 void drawSnakeHead(const float* color)
 {
     drawCircle(snake->GetHead().pos.x, snake->GetHead().pos.y, SNAKE_SIZE / 2, color);
@@ -669,8 +624,6 @@ void drawSnakeTail(const float* color)
 void drawSnake()
 {
     LIGHT.setupMaterial();
-    float snakeBodyColor[] = { 0.0f, 1.0f, 0.5f };
-    float snakeHeadColor[] = { 0.0f, 1.0f, 0.2f };
 
     if (score > 0)
     {
@@ -679,9 +632,6 @@ void drawSnake()
         {
             //drawQuad(sp->pos.x, sp->pos.y, SNAKE_SIZE, SNAKE_SIZE, snakeBodyColor);
 
-            
-            //glEnable(GL_BLEND);
-            //glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
             glm::vec2 dir = glm::normalize(sp->prev->pos - sp->pos);
             drawTexturedQuad(sp->pos.x, sp->pos.y, SNAKE_SIZE, SNAKE_SIZE, dir.x, dir.y, snakeBodyColor, snakeTexture);
             
@@ -726,12 +676,15 @@ GLuint loadTexture(const char* filePath) {
 }
 
 void drawTexturedQuad(float x, float y, float w, float h, float dirX, float dirY, const float* color, GLuint texture) {
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, texture);
     glEnable(GL_TEXTURE_2D);
     glBegin(GL_QUADS);
-    glColor3d(color[0], color[1], color[2]);
-
+    //glColor3d(color[0], color[1], color[2]);
+    
+    glColor4f(color[0], color[1], color[2], color[3]);
     if (dirY != 0)
     {
         glTexCoord2f(0.0f, 0.0f);
