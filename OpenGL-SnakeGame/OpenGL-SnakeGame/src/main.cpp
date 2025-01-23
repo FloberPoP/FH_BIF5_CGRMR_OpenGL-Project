@@ -192,15 +192,15 @@ int main(int argc, char** argv)
     glEnable(GL_COLOR_MATERIAL); // Allows glColor to interact with light
     glEnable(GL_FRAMEBUFFER_SRGB);
 
-    backgroundTexture = loadTexture("textures/brick.jpg");
-    normalMapTexture = loadTexture("textures/brick_normal.jpg");
-
     initShaders();
     initGL();
 
     // Load Textures
+    backgroundTexture = loadTexture("assets/brick.jpg");
+    normalMapTexture = loadTexture("assets/brick_normal.jpg");
     snakeTexture = loadTexture("assets/snakeBody.png");
     grassTexture = loadTexture("assets/grass.jpg");
+
     // Render loop
     while (!glfwWindowShouldClose(window))
     {
