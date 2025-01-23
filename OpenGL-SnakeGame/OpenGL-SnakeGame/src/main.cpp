@@ -142,6 +142,7 @@ void drawTexturedQuad(float x, float y, float w, float h, float dirX, float dirY
 
 GLuint snakeTexture;
 GLuint grassTexture;
+GLuint FruitTextures[10];
 
 int main(int argc, char** argv)
 {
@@ -201,6 +202,17 @@ int main(int argc, char** argv)
     snakeTexture = loadTexture("assets/snakeBody.png");
     grassTexture = loadTexture("assets/grass.jpg");
 
+    FruitTextures[FruitE::Cherry] = loadTexture("assets/cherry.png");
+    FruitTextures[FruitE::Banana] = loadTexture("assets/banana.png");
+    FruitTextures[FruitE::Meat] = loadTexture("assets/meat.png");
+    FruitTextures[FruitE::Eggplant] = loadTexture("assets/eggplant.png");
+    FruitTextures[FruitE::Beer] = loadTexture("assets/beer.png");
+    FruitTextures[FruitE::Orange] = loadTexture("assets/orange.png");
+    FruitTextures[FruitE::Pineapple] = loadTexture("assets/pineapple.png");
+    FruitTextures[FruitE::Peach] = loadTexture("assets/peach.png");
+    FruitTextures[FruitE::Brocoli] = loadTexture("assets/brocoli.png");
+    FruitTextures[FruitE::Pear] = loadTexture("assets/pear.png");
+        
     // Render loop
     while (!glfwWindowShouldClose(window))
     {
@@ -344,18 +356,7 @@ void renderGame()
     // Draw fruits
     for (Fruit fruit : fruits)
     {
-        switch (fruit.fruitType)
-        {
-        case 0: // Cherry
-            drawCherry(fruit.GetPos().x, fruit.GetPos().y);
-            break;
-        case 1: // Banana
-            drawBanana(fruit.GetPos().x, fruit.GetPos().y);
-            break;
-        default:
-            drawBanana(fruit.GetPos().x, fruit.GetPos().y);
-            break;
-        }
+        drawTexturedQuad(fruit.GetPos().x, fruit.GetPos().y, SNAKE_SIZE, SNAKE_SIZE, 0, 1, color, FruitTextures[fruit.fruitType]);
     }
 
     // Draw snake

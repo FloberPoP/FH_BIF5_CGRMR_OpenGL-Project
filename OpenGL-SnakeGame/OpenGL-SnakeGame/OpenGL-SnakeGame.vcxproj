@@ -158,7 +158,17 @@
     <Text Include="scores.txt" />
   </ItemGroup>
   <ItemGroup>
+    <Image Include="assets\banana.png" />
+    <Image Include="assets\beer.png" />
+    <Image Include="assets\brocoli.png" />
+    <Image Include="assets\cheery.png" />
+    <Image Include="assets\eggplant.png" />
     <Image Include="assets\grass.jpg" />
+    <Image Include="assets\meat.png" />
+    <Image Include="assets\orange.png" />
+    <Image Include="assets\peach.png" />
+    <Image Include="assets\pear.png" />
+    <Image Include="assets\pineapple.png" />
     <Image Include="assets\robo.png" />
     <Image Include="assets\brick.jpg" />
     <Image Include="assets\brick_normal.jpg" />
