@@ -167,6 +167,7 @@
     <Image Include="textures\brick.jpg" />
     <Image Include="textures\brick_normal.jpg" />
     <Image Include="textures\floor.png" />
+    <Image Include="assets\snakeBody.png" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

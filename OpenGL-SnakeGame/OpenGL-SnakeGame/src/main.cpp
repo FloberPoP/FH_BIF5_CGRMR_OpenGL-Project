@@ -136,10 +136,9 @@ void processInput(GLFWwindow* window);
 std::string switchConverter(bool b);
 
 GLuint loadTexture(const char* filePath);
-void drawTexturedQuad(float x, float y, float w, float h, GLuint texture);
-void drawSnakeBody();
 void drawBackground(GLuint texture, GLuint normalMapTexture);
 void renderNormalMap();
+void drawTexturedQuad(float x, float y, float w, float h, float dirX, float dirY, const float* color, GLuint texture);
 
 GLuint snakeTexture;
 
@@ -197,6 +196,9 @@ int main(int argc, char** argv)
 
     initShaders();
     initGL();
+
+    // Load Textures
+    snakeTexture = loadTexture("assets/snakeBody.png");
 
     // Render loop
     while (!glfwWindowShouldClose(window))
@@ -670,23 +672,22 @@ void drawSnake()
     if (score > 0)
     {
         drawSnakeTail(snakeBodyColor);
-        snakeTexture = loadTexture("assets/robo.png");
         for (SnakePart* sp = snake->GetTail()->prev; sp->prev != nullptr; sp = sp->prev)
         {
-            drawQuad(sp->pos.x, sp->pos.y, SNAKE_SIZE, SNAKE_SIZE, snakeBodyColor);
+            //drawQuad(sp->pos.x, sp->pos.y, SNAKE_SIZE, SNAKE_SIZE, snakeBodyColor);
 
             
-            glEnable(GL_BLEND);
-            glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-            drawTexturedQuad(sp->pos.x, sp->pos.y, SNAKE_SIZE, SNAKE_SIZE, snakeTexture);
+            //glEnable(GL_BLEND);
+            //glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+            glm::vec2 dir = glm::normalize(sp->prev->pos - sp->pos);
+            drawTexturedQuad(sp->pos.x, sp->pos.y, SNAKE_SIZE, SNAKE_SIZE, dir.x, dir.y, snakeBodyColor, snakeTexture);
             
         }
     }
     drawSnakeHead(snakeHeadColor);
 }
 
-std::string switchConverter(bool b)
-{
+std::string switchConverter(bool b) {
     if (b)
         return "ON";
     else
@@ -706,10 +707,10 @@ GLuint loadTexture(const char* filePath) {
 
     // Load image
     int width, height, nrChannels;
-    unsigned char* data = stbi_load(filePath, &width, &height, &nrChannels, 0);
+    unsigned char* data = stbi_load(filePath, &width, &height, &nrChannels, 4);
     if (data) {
         GLenum format = (nrChannels == 4) ? GL_RGBA : GL_RGB;
-        glTexImage2D(GL_TEXTURE_2D, 0, format, width, height, 0, format, GL_UNSIGNED_BYTE, data);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
         glGenerateMipmap(GL_TEXTURE_2D);
     }
     else {
@@ -720,31 +721,38 @@ GLuint loadTexture(const char* filePath) {
     return texture;
 }
 
-void drawTexturedQuad(float x, float y, float w, float h, GLuint texture) {
+void drawTexturedQuad(float x, float y, float w, float h, float dirX, float dirY, const float* color, GLuint texture) {
     glEnable(GL_TEXTURE_2D);
     glBegin(GL_QUADS);
-    //glColor3d(1, 0, 0);
+    glColor3d(color[0], color[1], color[2]);
 
-    glTexCoord2f(0.0f, 0.0f);
-    glVertex2f(x - w / 2, y - h / 2); // bottom left
-    glTexCoord2f(1.0f, 0.0f);
-    glVertex2f(x + w / 2, y - h / 2); // bottom right
-    glTexCoord2f(1.0f, 1.0f);
-    glVertex2f(x + w / 2, y + h / 2); // top right
-    glTexCoord2f(0.0f, 1.0f);
-    glVertex2f(x - w / 2, y + h / 2); // top left
+    if (dirY != 0)
+    {
+        glTexCoord2f(0.0f, 0.0f);
+        glVertex2f(x - w / 2, y - h / 2); // bottom left
+        glTexCoord2f(1.0f, 0.0f);
+        glVertex2f(x + w / 2, y - h / 2); // bottom right
+        glTexCoord2f(1.0f, 1.0f);
+        glVertex2f(x + w / 2, y + h / 2); // top right
+        glTexCoord2f(0.0f, 1.0f);
+        glVertex2f(x - w / 2, y + h / 2); // top left
+    }
+    else
+    {
+        glTexCoord2f(0.0f, 1.0f);
+        glVertex2f(x - w / 2, y - h / 2); // bottom left
+        glTexCoord2f(0.0f, 0.0f);
+        glVertex2f(x + w / 2, y - h / 2); // bottom right
+        glTexCoord2f(1.0f, 0.0f);
+        glVertex2f(x + w / 2, y + h / 2); // top right
+        glTexCoord2f(1.0f, 1.0f);
+        glVertex2f(x - w / 2, y + h / 2); // top left
+    }
     glEnd();
     glDisable(GL_TEXTURE_2D);
 }
 
-void drawSnakeBody() {
-    for (SnakePart* sp = snake->GetTail()->prev; sp->prev != nullptr; sp = sp->prev) {
-        drawTexturedQuad(sp->pos.x, sp->pos.y, SNAKE_SIZE, SNAKE_SIZE, snakeTexture);
-    }
-}
-
-void drawBackground(GLuint texture, GLuint normalMapTexture)
-{
+void drawBackground(GLuint texture, GLuint normalMapTexture) {
     // Use the shader program
     glUseProgram(shaderProgram);
 
