@@ -345,7 +345,7 @@ void renderGame()
     // Draw Background with NormalMap
     renderNormalMap();
     float color[] = { 1.0f, 1.0f, 1.0f };
-    drawTexturedQuad(0, 0, Grid::BORDER_OFFSET*2, Grid::BORDER_OFFSET*2, 0, 0, color, grassTexture);
+    drawTexturedQuad(0, 0, Grid::BORDER_OFFSET*2, Grid::BORDER_OFFSET*2, 0, 1, color, grassTexture);
 
     // Draw grid
     drawGrid();
@@ -710,6 +710,7 @@ GLuint loadTexture(const char* filePath) {
 
     // Load image
     int width, height, nrChannels;
+    stbi_set_flip_vertically_on_load(1);
     unsigned char* data = stbi_load(filePath, &width, &height, &nrChannels, 4);
     if (data) {
         GLenum format = (nrChannels == 4) ? GL_RGBA : GL_RGB;
