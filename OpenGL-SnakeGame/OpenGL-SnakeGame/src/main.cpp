@@ -208,7 +208,6 @@ int main(int argc, char** argv)
         renderGame();
 
 
-
         // Swap buffers and poll IO events
         glfwSwapBuffers(window);
         glfwPollEvents();
@@ -329,10 +328,10 @@ void renderGame()
     // Render
     glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
+    
     // Draw Background with NormalMap
     renderNormalMap();
-    
+
     // Draw grid
     drawGrid();
 
@@ -722,6 +721,8 @@ GLuint loadTexture(const char* filePath) {
 }
 
 void drawTexturedQuad(float x, float y, float w, float h, float dirX, float dirY, const float* color, GLuint texture) {
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, texture);
     glEnable(GL_TEXTURE_2D);
     glBegin(GL_QUADS);
     glColor3d(color[0], color[1], color[2]);
@@ -750,6 +751,7 @@ void drawTexturedQuad(float x, float y, float w, float h, float dirX, float dirY
     }
     glEnd();
     glDisable(GL_TEXTURE_2D);
+    glBindTexture(GL_TEXTURE_2D, 0);
 }
 
 void drawBackground(GLuint texture, GLuint normalMapTexture) {
@@ -787,4 +789,5 @@ void renderNormalMap() {
 
     // Draw the background with normal mapping
     drawBackground(backgroundTexture, normalMapTexture);
+    glUseProgram(0);
 }
