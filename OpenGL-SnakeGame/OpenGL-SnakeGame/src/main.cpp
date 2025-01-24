@@ -133,7 +133,6 @@ std::string switchConverter(bool b);
 
 GLuint loadTexture(const char* filePath);
 void drawBackground(GLuint texture, GLuint normalMapTexture);
-void renderNormalMap();
 void drawTexturedQuad(float x, float y, float w, float h, float dirX, float dirY, const float* color, GLuint texture);
 
 GLuint snakeTexture;
@@ -346,7 +345,7 @@ void renderGame()
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     
     // Draw Background with NormalMap
-    renderNormalMap();
+    drawBackground(backgroundTexture, normalMapTexture);
     drawTexturedQuad(0, 0, Grid::BORDER_OFFSET*2, Grid::BORDER_OFFSET*2, 0, 1, color, grassTexture);
 
     // Draw grid
@@ -736,18 +735,5 @@ void drawBackground(GLuint texture, GLuint normalMapTexture) {
     glBindVertexArray(VAO);
     glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
     glBindVertexArray(0);
-}
-
-void renderNormalMap() {
-    // Use the shader program
-    glUseProgram(shaderProgram);
-
-    // Set uniform values
-    glUniform3f(glGetUniformLocation(shaderProgram, "lightPos"), 1.0f, 1.0f, 1.0f);
-    glUniform3f(glGetUniformLocation(shaderProgram, "viewPos"), 0.0f, 0.0f, 3.0f);
-    glUniform3f(glGetUniformLocation(shaderProgram, "lightColor"), 1.0f, 1.0f, 1.0f);
-
-    // Draw the background with normal mapping
-    drawBackground(backgroundTexture, normalMapTexture);
     glUseProgram(0);
 }
