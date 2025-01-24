@@ -725,7 +725,7 @@ void drawBackground(GLuint texture, GLuint normalMapTexture) {
     glActiveTexture(GL_TEXTURE1);
     glBindTexture(GL_TEXTURE_2D, normalMapTexture);
     glUniform1i(glGetUniformLocation(shaderProgram, "normalMap"), 1);
-
+    
     // Set uniforms for lighting
     glUniform3f(glGetUniformLocation(shaderProgram, "lightPos"), 1.0f, 1.0f, 1.0f);
     glUniform3f(glGetUniformLocation(shaderProgram, "viewPos"), 0.0f, 0.0f, 3.0f);
